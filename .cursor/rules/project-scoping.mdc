@@ -1,0 +1,34 @@
+---
+description: Project-scoped multi-tenancy rules - project_id, scoping, authorization
+globs: app/**/*.php
+alwaysApply: true
+---
+
+# Project-Scoped Multi-Tenancy Rules
+
+## Core Rules
+
+1. **project_id required**: Every business data table MUST have `project_id`. All queries MUST be scoped by project.
+
+2. **Never mix projects**: Use `Model::forProject($project)` or `->where('project_id', $project->id)` on ALL queries for project-scoped models.
+
+3. **Authorization**: Check (a) user has project access AND (b) user role allows the action. Policies enforce both.
+
+4. **No hard-coded project IDs**: Never use `where('project_id', 1)`. Always pass `$project` from route.
+
+5. **Modules toggleable**: Check `$project->hasModule($key)` before module logic. Disabled module → 403, not crash.
+
+## Examples
+
+```php
+// ✅ GOOD - scoped by project
+$products = Product::forProject($project)->get();
+
+// ❌ BAD - mixes all projects
+$products = Product::all();
+
+// ✅ GOOD - validate resource belongs to project
+if (!ProjectUser::where('project_id', $project->id)->where('user_id', $worker->id)->exists()) {
+    abort(403);
+}
+```

@@ -1,0 +1,89 @@
+import AuthErrorHandler from '@/Components/AuthErrorHandler';
+import Sidebar from '@/Components/project/Sidebar';
+import Topbar from '@/Components/project/Topbar';
+import { usePage } from '@inertiajs/react';
+import { useState } from 'react';
+
+export default function ProjectLayout({ header, children }) {
+    const { currentProject, enabledModules, userRole, auth, userProjects } = usePage().props;
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const primaryColor = currentProject?.primary_color || '#3B82F6';
+    const secondaryColor = currentProject?.secondary_color || '#10B981';
+
+    return (
+        <div
+            className="min-h-screen bg-gray-50"
+            style={{
+                '--project-primary': primaryColor,
+                '--project-secondary': secondaryColor,
+            }}
+        >
+            <div className="flex min-h-screen">
+                {/* Desktop/tablet sidebar - sticky, full height, visible from md up */}
+                <div className="hidden shrink-0 md:block">
+                    <div className="sticky top-0 h-screen">
+                        <Sidebar currentProject={currentProject} enabledModules={enabledModules} userRole={userRole} />
+                    </div>
+                </div>
+
+                {/* Mobile sidebar - full-width drawer with safe areas */}
+                <div
+                    className={`fixed inset-y-0 left-0 z-40 w-[min(20rem,85vw)] max-w-full transform bg-gray-800 shadow-xl transition-transform duration-300 ease-out md:hidden ${
+                        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
+                    style={{
+                        paddingTop: 'env(safe-area-inset-top)',
+                        paddingBottom: 'env(safe-area-inset-bottom)',
+                        paddingLeft: 'env(safe-area-inset-left)',
+                    }}
+                >
+                    <div className="flex h-full flex-col overflow-hidden">
+                        <Sidebar
+                            currentProject={currentProject}
+                            enabledModules={enabledModules}
+                            userRole={userRole}
+                            onNavigate={() => setSidebarOpen(false)}
+                            variant="mobile"
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-3 top-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition hover:bg-white/10 active:bg-white/20"
+                            onClick={() => setSidebarOpen(false)}
+                            aria-label="Close navigation"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {sidebarOpen && (
+                    <div
+                        className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity md:hidden"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-hidden="true"
+                    />
+                )}
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <Topbar
+                        currentProject={currentProject}
+                        userProjects={userProjects}
+                        user={auth?.user}
+                        onToggleSidebar={() => setSidebarOpen(true)}
+                    />
+                    <main className="flex-1">
+                        {header && (
+                            <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
+                                <div className="mx-auto max-w-7xl">{header}</div>
+                            </div>
+                        )}
+                        <div className="p-4 sm:p-6">{children}</div>
+                    </main>
+                </div>
+            </div>
+            <AuthErrorHandler />
+        </div>
+    );
+}

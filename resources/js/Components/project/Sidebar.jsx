@@ -1,0 +1,136 @@
+import { Link, usePage } from '@inertiajs/react';
+
+const iconPaths = {
+    'shopping-cart': 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
+    'check-square': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    'credit-card': 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+    'clipboard-list': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+    package: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+    archive: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
+    'trending-up': 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+    'dollar-sign': 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    truck: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
+    'file-text': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    folder: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+    'users': 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    'shield': 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+    'view-grid': 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+};
+
+function SidebarIcon({ icon }) {
+    const path = iconPaths[icon] || iconPaths.folder;
+    return (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
+        </svg>
+    );
+}
+
+function NavItem({ href, active, icon, children, onNavigate, isMobile }) {
+    return (
+        <Link
+            href={href}
+            onClick={() => onNavigate?.()}
+            className={`flex min-h-[44px] items-center gap-3 rounded-lg px-3 font-medium transition-colors ${
+                isMobile ? 'py-3.5 text-base' : 'py-2.5 text-sm'
+            } ${
+                active ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white active:bg-white/15'
+            }`}
+        >
+            <SidebarIcon icon={icon} />
+            {children}
+        </Link>
+    );
+}
+
+export default function Sidebar({
+    currentProject,
+    enabledModules,
+    userRole,
+    onNavigate,
+    className = '',
+    variant = 'desktop',
+}) {
+    const { url } = usePage();
+    const projectId = currentProject?.id;
+
+    if (!projectId) return null;
+
+    const isActive = (path) => url.startsWith(path);
+    const isMobile = variant === 'mobile';
+
+    return (
+        <aside
+            className={`flex h-full shrink-0 flex-col bg-gray-800 ${isMobile ? 'w-full' : 'w-64'} ${className}`}
+            style={isMobile ? { overscrollBehavior: 'contain' } : undefined}
+        >
+            <div className={`flex shrink-0 items-center gap-2 border-b border-white/10 px-4 ${isMobile ? 'h-14 min-h-[3.5rem]' : 'h-16'}`}>
+                {currentProject?.logo ? (
+                    <img
+                        src={currentProject.logo}
+                        alt={currentProject.name}
+                        className="h-9 w-9 rounded-lg object-cover"
+                    />
+                ) : (
+                    <div
+                        className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: currentProject?.primary_color || '#3B82F6' }}
+                    >
+                        {currentProject?.name?.charAt(0)}
+                    </div>
+                )}
+                <span className="font-semibold text-white truncate">{currentProject?.name}</span>
+            </div>
+
+            <nav
+                className={`flex-1 space-y-0.5 overflow-y-auto p-3 ${isMobile ? 'overflow-x-hidden overscroll-contain pb-6' : ''}`}
+                style={isMobile ? { WebkitOverflowScrolling: 'touch' } : undefined}
+            >
+                <NavItem
+                    href={route('projects.show', projectId)}
+                    active={url === route('projects.show', projectId)}
+                    icon="view-grid"
+                    onNavigate={onNavigate}
+                    isMobile={isMobile}
+                >
+                    Dashboard
+                </NavItem>
+
+                {enabledModules?.map((module) => (
+                    <NavItem
+                        key={module.key}
+                        href={route('projects.modules.show', [projectId, module.key])}
+                        active={isActive(`/projects/${projectId}/modules/${module.key}`)}
+                        icon={module.icon}
+                        onNavigate={onNavigate}
+                        isMobile={isMobile}
+                    >
+                        {module.name}
+                    </NavItem>
+                ))}
+
+                <div className={`border-t border-white/10 ${isMobile ? 'my-3' : 'my-4'}`} />
+
+                <NavItem
+                    href={route('projects.workers.index', projectId)}
+                    active={isActive(`/projects/${projectId}/workers`)}
+                    icon="users"
+                    onNavigate={onNavigate}
+                    isMobile={isMobile}
+                >
+                    Workers
+                </NavItem>
+
+                <NavItem
+                    href={route('projects.roles.index', projectId)}
+                    active={isActive(`/projects/${projectId}/roles`)}
+                    icon="shield"
+                    onNavigate={onNavigate}
+                    isMobile={isMobile}
+                >
+                    Roles & Permissions
+                </NavItem>
+            </nav>
+        </aside>
+    );
+}
