@@ -30,6 +30,12 @@ class WorkerController extends Controller
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
         }
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->role_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         $assignments = $query->get()->map(fn ($pu) => [
             'id' => $pu->id,
@@ -58,6 +64,12 @@ class WorkerController extends Controller
             'users' => $users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email]),
             'projects' => $projects->map(fn ($p) => ['id' => $p->id, 'name' => $p->name]),
             'roles' => $roles->map(fn ($r) => ['id' => $r->id, 'name' => $r->name, 'slug' => $r->slug]),
+            'filters' => [
+                'project_id' => $request->project_id,
+                'user_id' => $request->user_id,
+                'role_id' => $request->role_id,
+                'status' => $request->status,
+            ],
         ]);
     }
 

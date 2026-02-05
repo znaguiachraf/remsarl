@@ -1,9 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ModuleController as AdminModuleController;
 use App\Http\Controllers\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\WorkerController as AdminWorkerController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductCategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
@@ -27,11 +35,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
+        Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+        Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
+        Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('/users/{user}/block', [AdminUserController::class, 'block'])->name('users.block');
+        Route::post('/users/{user}/unblock', [AdminUserController::class, 'unblock'])->name('users.unblock');
         Route::resource('permissions', AdminPermissionController::class)->except(['show']);
         Route::resource('roles', AdminRoleController::class)->except(['show']);
         Route::get('/workers', [AdminWorkerController::class, 'index'])->name('workers.index');
         Route::post('/workers', [AdminWorkerController::class, 'store'])->name('workers.store');
         Route::delete('/workers/{project_user}', [AdminWorkerController::class, 'destroy'])->name('workers.destroy');
+        Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
+        Route::get('/modules/{project}/edit', [AdminModuleController::class, 'edit'])->name('modules.edit');
+        Route::patch('/modules/{project}', [AdminModuleController::class, 'update'])->name('modules.update');
     });
 
     Route::prefix('projects')->name('projects.')->group(function () {
@@ -52,6 +69,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
 
             Route::get('/roles', [ProjectRoleController::class, 'index'])->name('roles.index');
+
+            Route::prefix('modules/logs')->name('modules.logs.')->middleware('project.module:logs')->group(function () {
+                Route::get('/', [ActivityLogController::class, 'index'])->name('index');
+            });
+
+            Route::prefix('modules/payments')->name('modules.payments.')->middleware('project.module:payments')->group(function () {
+                Route::get('/', [PaymentController::class, 'index'])->name('index');
+                Route::post('/', [PaymentController::class, 'store'])->name('store');
+                Route::patch('/{payment}', [PaymentController::class, 'update'])->name('update');
+                Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
+                Route::post('/{payment}/refund', [PaymentController::class, 'refund'])->name('refund');
+                Route::post('/{payment}/reinstate', [PaymentController::class, 'reinstate'])->name('reinstate');
+            });
+
+            Route::prefix('modules/products')->name('modules.products.')->middleware('project.module:products')->group(function () {
+                Route::get('/', [ProductController::class, 'index'])->name('index');
+                Route::post('/', [ProductController::class, 'store'])->name('store');
+                Route::patch('/{product}', [ProductController::class, 'update'])->name('update');
+                Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+                Route::prefix('categories')->name('categories.')->group(function () {
+                    Route::get('/', [ProductCategoryController::class, 'index'])->name('index');
+                    Route::post('/', [ProductCategoryController::class, 'store'])->name('store');
+                    Route::patch('/{category}', [ProductCategoryController::class, 'update'])->name('update');
+                    Route::delete('/{category}', [ProductCategoryController::class, 'destroy'])->name('destroy');
+                });
+            });
+
+            Route::prefix('modules/expenses')->name('modules.expenses.')->middleware('project.module:expenses')->group(function () {
+                Route::get('/', [ExpenseController::class, 'index'])->name('index');
+                Route::post('/', [ExpenseController::class, 'store'])->name('store');
+                Route::patch('/{expense}', [ExpenseController::class, 'update'])->name('update');
+                Route::post('/{expense}/pay', [ExpenseController::class, 'pay'])->name('pay');
+                Route::prefix('categories')->name('categories.')->group(function () {
+                    Route::get('/', [ExpenseCategoryController::class, 'index'])->name('index');
+                    Route::post('/', [ExpenseCategoryController::class, 'store'])->name('store');
+                    Route::patch('/{category}', [ExpenseCategoryController::class, 'update'])->name('update');
+                    Route::delete('/{category}', [ExpenseCategoryController::class, 'destroy'])->name('destroy');
+                });
+            });
 
             Route::prefix('modules/{module}')->name('modules.')->middleware('project.module')->group(function () {
                 Route::get('/', [ModuleController::class, '__invoke'])->name('show');

@@ -1,3 +1,4 @@
+import AdminIcon from '@/Components/AdminIcon';
 import AdminLayout from '@/Layouts/AdminLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -22,7 +23,12 @@ export default function PermissionCreate() {
     return (
         <AdminLayout
             header={
-                <h1 className="text-2xl font-bold text-gray-900">Create Permission</h1>
+                <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-indigo-50 p-2">
+                        <AdminIcon icon="permissions" className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900">Create Permission</h1>
+                </div>
             }
         >
             <Head title="Create Permission - Admin" />

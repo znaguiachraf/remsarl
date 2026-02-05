@@ -1,3 +1,4 @@
+import AdminIcon from '@/Components/AdminIcon';
 import AdminLayout from '@/Layouts/AdminLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -6,13 +7,19 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, useForm } from '@inertiajs/react';
 
+function ensureArray(val) {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') return Object.values(val).map(Number).filter(Boolean);
+    return [];
+}
+
 export default function RoleEdit({ role, permissions }) {
     const { data, setData, patch, processing, errors } = useForm({
         name: role?.name ?? '',
         slug: role?.slug ?? '',
         description: role?.description ?? '',
         level: role?.level ?? 40,
-        permission_ids: role?.permission_ids ?? [],
+        permission_ids: ensureArray(role?.permission_ids),
     });
 
     const handleSubmit = (e) => {
@@ -20,9 +27,11 @@ export default function RoleEdit({ role, permissions }) {
         patch(route('admin.roles.update', role.id));
     };
 
+    const permissionIds = ensureArray(data.permission_ids);
+
     const togglePermission = (id) => {
-        setData('permission_ids', (prev) =>
-            prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+        setData('permission_ids',
+            permissionIds.includes(id) ? permissionIds.filter((p) => p !== id) : [...permissionIds, id]
         );
     };
 
@@ -36,7 +45,12 @@ export default function RoleEdit({ role, permissions }) {
     return (
         <AdminLayout
             header={
-                <h1 className="text-2xl font-bold text-gray-900">Edit Role</h1>
+                <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-indigo-50 p-2">
+                        <AdminIcon icon="roles" className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900">Edit Role</h1>
+                </div>
             }
         >
             <Head title={`Edit ${role?.name} - Admin`} />
@@ -103,7 +117,7 @@ export default function RoleEdit({ role, permissions }) {
                                         <label key={perm.id} className="flex items-center gap-2">
                                             <input
                                                 type="checkbox"
-                                                checked={data.permission_ids.includes(perm.id)}
+                                                checked={permissionIds.includes(perm.id)}
                                                 onChange={() => togglePermission(perm.id)}
                                                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                             />

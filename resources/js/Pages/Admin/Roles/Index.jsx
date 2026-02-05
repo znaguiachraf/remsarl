@@ -1,3 +1,4 @@
+import AdminIcon from '@/Components/AdminIcon';
 import AdminLayout from '@/Layouts/AdminLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Head, Link, router } from '@inertiajs/react';
@@ -14,10 +15,18 @@ export default function RolesIndex({ roles, flash }) {
     return (
         <AdminLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Roles</h1>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-indigo-50 p-2">
+                            <AdminIcon icon="roles" className="w-6 h-6 text-indigo-600" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-900">Roles</h1>
+                    </div>
                     <Link href={route('admin.roles.create')}>
-                        <PrimaryButton>Create Role</PrimaryButton>
+                        <PrimaryButton className="flex items-center gap-2">
+                            <AdminIcon icon="plus" className="w-5 h-5" />
+                            Create Role
+                        </PrimaryButton>
                     </Link>
                 </div>
             }

@@ -26,19 +26,20 @@ function SidebarIcon({ icon }) {
     );
 }
 
-function NavItem({ href, active, icon, children, onNavigate, isMobile }) {
+function NavItem({ href, active, icon, children, onNavigate, isMobile, collapsed }) {
     return (
         <Link
             href={href}
             onClick={() => onNavigate?.()}
+            title={collapsed ? children : undefined}
             className={`flex min-h-[44px] items-center gap-3 rounded-lg px-3 font-medium transition-colors ${
                 isMobile ? 'py-3.5 text-base' : 'py-2.5 text-sm'
-            } ${
+            } ${collapsed ? 'justify-center px-2' : ''} ${
                 active ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white active:bg-white/15'
             }`}
         >
             <SidebarIcon icon={icon} />
-            {children}
+            {!collapsed && children}
         </Link>
     );
 }
@@ -48,6 +49,9 @@ export default function Sidebar({
     enabledModules,
     userRole,
     onNavigate,
+    onClose,
+    collapsed = false,
+    onToggleCollapse,
     className = '',
     variant = 'desktop',
 }) {
@@ -58,32 +62,64 @@ export default function Sidebar({
 
     const isActive = (path) => url.startsWith(path);
     const isMobile = variant === 'mobile';
+    const isCollapsed = !isMobile && collapsed;
+
+    const handleToggle = () => {
+        if (isMobile) {
+            onClose?.();
+        } else {
+            onToggleCollapse?.();
+        }
+    };
 
     return (
         <aside
-            className={`flex h-full shrink-0 flex-col bg-gray-800 ${isMobile ? 'w-full' : 'w-64'} ${className}`}
+            className={`flex h-full shrink-0 flex-col bg-gray-800 transition-[width] duration-200 ${isMobile ? 'w-full' : isCollapsed ? 'w-20' : 'w-64'} ${className}`}
             style={isMobile ? { overscrollBehavior: 'contain' } : undefined}
         >
-            <div className={`flex shrink-0 items-center gap-2 border-b border-white/10 px-4 ${isMobile ? 'h-14 min-h-[3.5rem]' : 'h-16'}`}>
-                {currentProject?.logo ? (
-                    <img
-                        src={currentProject.logo}
-                        alt={currentProject.name}
-                        className="h-9 w-9 rounded-lg object-cover"
-                    />
-                ) : (
-                    <div
-                        className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: currentProject?.primary_color || '#3B82F6' }}
-                    >
-                        {currentProject?.name?.charAt(0)}
-                    </div>
-                )}
-                <span className="font-semibold text-white truncate">{currentProject?.name}</span>
+            <div className={`flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 ${isMobile ? 'h-14 min-h-[3.5rem]' : 'h-16'} ${isCollapsed ? 'px-2' : 'px-4'}`}>
+                <div className={`flex min-w-0 flex-1 items-center gap-2 ${isCollapsed ? 'justify-center' : ''}`}>
+                    {currentProject?.logo ? (
+                        <img
+                            src={currentProject.logo}
+                            alt={currentProject.name}
+                            className="h-9 w-9 shrink-0 rounded-lg object-cover"
+                        />
+                    ) : (
+                        <div
+                            className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                            style={{ backgroundColor: currentProject?.primary_color || '#3B82F6' }}
+                        >
+                            {currentProject?.name?.charAt(0)}
+                        </div>
+                    )}
+                    {!isCollapsed && <span className="font-semibold text-white truncate">{currentProject?.name}</span>}
+                </div>
+                <button
+                    type="button"
+                    onClick={handleToggle}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/80 transition hover:bg-white/10 hover:text-white"
+                    aria-label={isMobile ? 'Close menu' : isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    title={isMobile ? 'Close menu' : isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                    {isMobile ? (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    ) : isCollapsed ? (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    ) : (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    )}
+                </button>
             </div>
 
             <nav
-                className={`flex-1 space-y-0.5 overflow-y-auto p-3 ${isMobile ? 'overflow-x-hidden overscroll-contain pb-6' : ''}`}
+                className={`flex-1 space-y-0.5 overflow-y-auto ${isCollapsed ? 'p-2' : 'p-3'} ${isMobile ? 'overflow-x-hidden overscroll-contain pb-6' : ''}`}
                 style={isMobile ? { WebkitOverflowScrolling: 'touch' } : undefined}
             >
                 <NavItem
@@ -92,6 +128,7 @@ export default function Sidebar({
                     icon="view-grid"
                     onNavigate={onNavigate}
                     isMobile={isMobile}
+                    collapsed={isCollapsed}
                 >
                     Dashboard
                 </NavItem>
@@ -104,6 +141,7 @@ export default function Sidebar({
                         icon={module.icon}
                         onNavigate={onNavigate}
                         isMobile={isMobile}
+                        collapsed={isCollapsed}
                     >
                         {module.name}
                     </NavItem>
@@ -117,6 +155,7 @@ export default function Sidebar({
                     icon="users"
                     onNavigate={onNavigate}
                     isMobile={isMobile}
+                    collapsed={isCollapsed}
                 >
                     Workers
                 </NavItem>
@@ -127,6 +166,7 @@ export default function Sidebar({
                     icon="shield"
                     onNavigate={onNavigate}
                     isMobile={isMobile}
+                    collapsed={isCollapsed}
                 >
                     Roles & Permissions
                 </NavItem>

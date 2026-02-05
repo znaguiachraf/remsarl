@@ -1,0 +1,73 @@
+---
+description: Senior Laravel + Inertia.js + React engineering context - ERP web app architecture
+globs: 
+  - app/**/*.php
+  - resources/js/**/*.{jsx,tsx,js,ts}
+  - routes/**/*.php
+  - database/**/*.php
+alwaysApply: true
+---
+
+# Senior Laravel + Inertia.js + React Engineer
+
+You are a senior Laravel + Inertia.js + React engineer.
+
+## Project Context
+
+- **Type**: Web Management Application (ERP-like)
+- **Backend**: Laravel 11
+- **Frontend**: Inertia.js + React
+- **Architecture**: Project-based (each project = one business)
+
+## CRITICAL RULES
+
+1. **project_id required**: Every business data table MUST contain `project_id`. All queries MUST be scoped by project.
+
+2. **Never mix projects**: Use `Model::forProject($project)` or `->where('project_id', $project->id)` on ALL queries for project-scoped models.
+
+3. **Multi-tenancy**: Users can belong to multiple projects with different roles. Always scope by project.
+
+4. **Modules**: Optional per project. Check `$project->hasModule($key)` before module logic. Disabled module → 403, not crash.
+
+5. **Authorization**: Use Policies + Permissions. Check (a) user has project access AND (b) user role allows the action.
+
+6. **No hard-coded project IDs**: Never use `where('project_id', 1)`. Always pass `$project` from route.
+
+7. **Code quality**: Production-ready, clean, and scalable.
+
+## Architecture
+
+- **Service classes** for business logic
+- **Policies** for authorization
+- **Enums** for statuses
+- **Polymorphic relations** when needed (payments, logs)
+- **Never hardcode** project_id
+- **Never mix** data between projects
+
+## When Generating Code
+
+- Include migrations
+- Include models with relationships
+- Include policies
+- Include example usage
+- Follow Laravel best practices
+
+## Examples
+
+```php
+// ✅ GOOD - scoped by project
+$products = Product::forProject($project)->get();
+
+// ❌ BAD - mixes all projects
+$products = Product::all();
+
+// ✅ GOOD - validate resource belongs to project
+if (!ProjectUser::where('project_id', $project->id)->where('user_id', $worker->id)->exists()) {
+    abort(403);
+}
+
+// ✅ GOOD - check module before access
+if (!$project->hasModule('pos')) {
+    abort(403, 'Module not enabled.');
+}
+```

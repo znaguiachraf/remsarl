@@ -7,6 +7,7 @@ import { useState } from 'react';
 export default function ProjectLayout({ header, children }) {
     const { currentProject, enabledModules, userRole, auth, userProjects } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const primaryColor = currentProject?.primary_color || '#3B82F6';
     const secondaryColor = currentProject?.secondary_color || '#10B981';
@@ -23,7 +24,13 @@ export default function ProjectLayout({ header, children }) {
                 {/* Desktop/tablet sidebar - sticky, full height, visible from md up */}
                 <div className="hidden shrink-0 md:block">
                     <div className="sticky top-0 h-screen">
-                        <Sidebar currentProject={currentProject} enabledModules={enabledModules} userRole={userRole} />
+                        <Sidebar
+                            currentProject={currentProject}
+                            enabledModules={enabledModules}
+                            userRole={userRole}
+                            collapsed={sidebarCollapsed}
+                            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        />
                     </div>
                 </div>
 
@@ -45,17 +52,8 @@ export default function ProjectLayout({ header, children }) {
                             userRole={userRole}
                             onNavigate={() => setSidebarOpen(false)}
                             variant="mobile"
+                            onClose={() => setSidebarOpen(false)}
                         />
-                        <button
-                            type="button"
-                            className="absolute right-3 top-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition hover:bg-white/10 active:bg-white/20"
-                            onClick={() => setSidebarOpen(false)}
-                            aria-label="Close navigation"
-                        >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
                 {sidebarOpen && (
