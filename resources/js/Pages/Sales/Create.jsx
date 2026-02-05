@@ -10,7 +10,7 @@ import {
     IconPlus,
     IconTrash,
 } from '@/Components/expense/Icons';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function SalesCreate({ project, products }) {
@@ -21,6 +21,8 @@ export default function SalesCreate({ project, products }) {
     const [payments, setPayments] = useState([]);
     const [productSearch, setProductSearch] = useState({});
     const [openDropdown, setOpenDropdown] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -33,12 +35,7 @@ export default function SalesCreate({ project, products }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const form = useForm({
-        items: [],
-        discount: '0',
-        tax: '0',
-        payments: [],
-    });
+    const [formData, setFormData] = useState({ discount: '0', tax: '0' });
 
     const addLine = () => {
         setLineItems([...lineItems, { product_id: '', quantity: 1, unit_price: '' }]);
@@ -89,8 +86,8 @@ export default function SalesCreate({ project, products }) {
         const price = line.unit_price ? parseFloat(line.unit_price) : (p?.price ?? 0);
         return sum + (line.quantity || 0) * price;
     }, 0);
-    const discount = parseFloat(form.data.discount) || 0;
-    const tax = parseFloat(form.data.tax) || 0;
+    const discount = parseFloat(formData.discount) || 0;
+    const tax = parseFloat(formData.tax) || 0;
     const total = subtotal - discount + tax;
     const paymentsTotal = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
@@ -105,7 +102,7 @@ export default function SalesCreate({ project, products }) {
             }));
 
         if (validItems.length === 0) {
-            form.setError('items', 'Add at least one product.');
+            setErrors({ items: 'Add at least one product.' });
             return;
         }
 
@@ -119,17 +116,21 @@ export default function SalesCreate({ project, products }) {
             }));
 
         if (validPayments.length > 0 && validPayments.reduce((s, p) => s + p.amount, 0) > total) {
-            form.setError('payments', 'Total payments cannot exceed sale total.');
+            setErrors({ payments: 'Total payments cannot exceed sale total.' });
             return;
         }
 
-        form.transform(() => ({
+        setErrors({});
+        setSubmitting(true);
+        router.post(route('projects.modules.sales.store', project.id), {
             items: validItems,
             discount: discount.toString(),
             tax: tax.toString(),
             payments: validPayments,
-        })).post(route('projects.modules.sales.store', project.id), {
+        }, {
             preserveScroll: true,
+            onFinish: () => setSubmitting(false),
+            onError: (errs) => setErrors(errs),
         });
     };
 
@@ -245,7 +246,7 @@ export default function SalesCreate({ project, products }) {
                             <IconPlus className="h-4 w-4" /> Add line
                         </button>
                     </div>
-                    <InputError message={form.errors.items} />
+                    <InputError message={errors.items} />
                 </div>
 
                 <div
@@ -267,8 +268,8 @@ export default function SalesCreate({ project, products }) {
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                value={form.data.discount}
-                                onChange={(e) => form.setData('discount', e.target.value)}
+                                value={formData.discount}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, discount: e.target.value }))}
                                 className="block w-24"
                             />
                         </div>
@@ -278,8 +279,8 @@ export default function SalesCreate({ project, products }) {
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                value={form.data.tax}
-                                onChange={(e) => form.setData('tax', e.target.value)}
+                                value={formData.tax}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, tax: e.target.value }))}
                                 className="block w-24"
                             />
                         </div>
@@ -364,14 +365,14 @@ export default function SalesCreate({ project, products }) {
                             </p>
                         )}
                     </div>
-                    <InputError message={form.errors.payments} />
+                    <InputError message={errors.payments} />
                 </div>
 
                 <div className="flex justify-end gap-2">
                     <Link href={route('projects.modules.sales.index', project.id)}>
                         <SecondaryButton type="button">Cancel</SecondaryButton>
                     </Link>
-                    <PrimaryButton type="submit" disabled={form.processing}>
+                    <PrimaryButton type="submit" disabled={submitting}>
                         Create Sale
                     </PrimaryButton>
                 </div>
