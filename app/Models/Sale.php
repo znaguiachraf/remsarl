@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToProject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sale extends Model
@@ -36,9 +36,14 @@ class Sale extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function payments(): MorphMany
+    public function payments(): HasMany
     {
-        return $this->morphMany(Payment::class, 'payable');
+        return $this->hasMany(Payment::class);
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
     }
 
     public function getTotalDueAttribute(): float
@@ -51,5 +56,30 @@ class Sale extends Model
         return (float) $this->payments()
             ->whereNotIn('status', ['failed', 'refunded'])
             ->sum('amount');
+    }
+
+    /**
+     * Payment status: unpaid, partial, paid (computed from total_paid vs total).
+     */
+    public function getPaymentStatusAttribute(): string
+    {
+        if (in_array($this->status, ['cancelled', 'refunded'])) {
+            return $this->status;
+        }
+
+        $total = (float) $this->total;
+        $paid = (float) $this->total_paid;
+
+        if ($total <= 0) {
+            return 'paid';
+        }
+        if ($paid <= 0) {
+            return 'unpaid';
+        }
+        if ($paid >= $total) {
+            return 'paid';
+        }
+
+        return 'partial';
     }
 }

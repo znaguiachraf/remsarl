@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\ExpenseStatus;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Models\Payment;
 use App\Models\Project;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -106,20 +105,7 @@ class ExpenseService
 
     public function pay(Expense $expense, array $paymentData): Expense
     {
-        $expense = DB::transaction(function () use ($expense, $paymentData) {
-            $payment = Payment::create([
-                'project_id' => $expense->project_id,
-                'payable_type' => Expense::class,
-                'payable_id' => $expense->id,
-                'payment_method' => $paymentData['payment_method'],
-                'amount' => $paymentData['amount'],
-                'reference' => $paymentData['reference'] ?? null,
-                'payment_date' => $paymentData['payment_date'],
-                'user_id' => auth()->id(),
-                'notes' => $paymentData['notes'] ?? null,
-                'status' => 'paid',
-            ]);
-
+        $expense = DB::transaction(function () use ($expense) {
             $expense->update(['status' => ExpenseStatus::Paid]);
 
             $this->activityLogService->log(
@@ -127,12 +113,12 @@ class ExpenseService
                 'paid',
                 $expense,
                 ['status' => 'pending'],
-                ['status' => 'paid', 'payment_id' => $payment->id],
+                ['status' => 'paid'],
                 'expenses',
                 "Expense #{$expense->id} marked as paid"
             );
 
-            return $expense->fresh(['expenseCategory', 'payments']);
+            return $expense->fresh(['expenseCategory']);
         });
 
         return $expense;

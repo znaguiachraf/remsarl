@@ -2,10 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\ExpenseStatus;
 use App\Enums\PaymentStatus;
-use App\Models\Expense;
-use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Sale;
@@ -22,15 +19,12 @@ class PaymentService
     public function list(Project $project, array $filters = []): LengthAwarePaginator
     {
         $query = Payment::forProject($project)
-            ->with(['user', 'payable'])
+            ->with(['user', 'sale'])
             ->orderByDesc('payment_date')
             ->orderByDesc('created_at');
 
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
-        }
-        if (!empty($filters['payable_type'])) {
-            $query->where('payable_type', $filters['payable_type']);
         }
         if (!empty($filters['payment_method'])) {
             $query->where('payment_method', $filters['payment_method']);
@@ -45,52 +39,45 @@ class PaymentService
         return $query->paginate($filters['per_page'] ?? 20)->withQueryString();
     }
 
-    public function create(Project $project, array $data): Payment
+    /**
+     * Create payment(s) for a sale. Called automatically when a sale is created.
+     * Every sale has one or more payments.
+     */
+    public function createForSale(Sale $sale, array $paymentData): Payment
     {
-        $payable = $this->resolvePayable($data['payable_type'], $data['payable_id']);
-        if (!$payable || $payable->project_id !== $project->id) {
-            throw new InvalidArgumentException('Invalid payable or payable does not belong to project.');
+        if ($sale->project_id === null) {
+            throw new InvalidArgumentException('Sale must belong to a project.');
         }
 
-        $amount = (float) $data['amount'];
-        $totalDue = (float) $payable->total_due;
-        $totalPaid = (float) $payable->total_paid;
-        $remaining = max(0, $totalDue - $totalPaid);
-
+        $amount = (float) ($paymentData['amount'] ?? $sale->total);
         if ($amount <= 0) {
             throw new InvalidArgumentException('Payment amount must be greater than zero.');
         }
-        if ($amount > $remaining) {
-            throw new InvalidArgumentException("Payment amount exceeds remaining due ({$remaining}). Overpayment not allowed.");
-        }
 
-        return DB::transaction(function () use ($project, $data, $payable) {
+        return DB::transaction(function () use ($sale, $paymentData, $amount) {
             $payment = Payment::create([
-                'project_id' => $project->id,
-                'payable_type' => $data['payable_type'],
-                'payable_id' => $data['payable_id'],
-                'payment_method' => $data['payment_method'],
-                'amount' => $data['amount'],
-                'reference' => $data['reference'] ?? null,
-                'payment_date' => $data['payment_date'],
+                'project_id' => $sale->project_id,
+                'sale_id' => $sale->id,
+                'payment_method' => $paymentData['payment_method'] ?? 'cash',
+                'amount' => $amount,
+                'reference' => $paymentData['reference'] ?? null,
+                'payment_date' => $paymentData['payment_date'] ?? now()->format('Y-m-d'),
                 'user_id' => auth()->id(),
-                'notes' => $data['notes'] ?? null,
+                'notes' => $paymentData['notes'] ?? null,
                 'status' => PaymentStatus::Paid,
             ]);
 
-            $this->updatePayableStatusIfNeeded($payable);
-
             $this->activityLogService->log(
-                $project,
+                $sale->project,
                 'created',
                 $payment,
                 null,
                 $payment->toArray(),
                 'payments',
-                "Payment #{$payment->id} created for " . class_basename($payable) . " #{$payable->id}"
+                "Payment #{$payment->id} created for Sale #{$sale->id}"
             );
 
-            return $payment->load(['user', 'payable']);
+            return $payment->load(['user', 'sale']);
         });
     }
 
@@ -104,11 +91,6 @@ class PaymentService
             $oldStatus = $payment->status->value;
             $payment->update(['status' => PaymentStatus::Refunded]);
 
-            $payable = $payment->payable;
-            if ($payable) {
-                $this->updatePayableStatusIfNeeded($payable);
-            }
-
             $this->activityLogService->log(
                 $payment->project,
                 'refunded',
@@ -119,7 +101,7 @@ class PaymentService
                 "Payment #{$payment->id} refunded"
             );
 
-            return $payment->fresh(['user', 'payable']);
+            return $payment->fresh(['user', 'sale']);
         });
     }
 
@@ -132,11 +114,6 @@ class PaymentService
         return DB::transaction(function () use ($payment) {
             $payment->update(['status' => PaymentStatus::Paid]);
 
-            $payable = $payment->payable;
-            if ($payable) {
-                $this->updatePayableStatusIfNeeded($payable);
-            }
-
             $this->activityLogService->log(
                 $payment->project,
                 'reinstate',
@@ -147,7 +124,7 @@ class PaymentService
                 "Payment #{$payment->id} reinstated"
             );
 
-            return $payment->fresh(['user', 'payable']);
+            return $payment->fresh(['user', 'sale']);
         });
     }
 
@@ -157,22 +134,22 @@ class PaymentService
             throw new InvalidArgumentException('Cannot edit a refunded payment.');
         }
 
-        $payable = $payment->payable;
+        $sale = $payment->sale;
         $oldValues = $payment->toArray();
 
-        if (isset($data['amount']) && $payable) {
+        if (isset($data['amount']) && $sale) {
             $newAmount = (float) $data['amount'];
-            $otherPaid = (float) $payable->payments()
+            $otherPaid = (float) $sale->payments()
                 ->where('id', '!=', $payment->id)
                 ->whereNotIn('status', ['failed', 'refunded'])
                 ->sum('amount');
-            $remaining = max(0, (float) $payable->total_due - $otherPaid);
+            $remaining = max(0, (float) $sale->total_due - $otherPaid);
             if ($newAmount > $remaining) {
                 throw new InvalidArgumentException("Amount exceeds remaining due ({$remaining}). Overpayment not allowed.");
             }
         }
 
-        return DB::transaction(function () use ($payment, $data, $payable, $oldValues) {
+        return DB::transaction(function () use ($payment, $data, $oldValues) {
             $update = [
                 'payment_method' => $data['payment_method'] ?? $payment->payment_method,
                 'amount' => array_key_exists('amount', $data) ? $data['amount'] : $payment->amount,
@@ -182,10 +159,6 @@ class PaymentService
                 'status' => $data['status'] ?? $payment->status->value,
             ];
             $payment->update($update);
-
-            if ($payable) {
-                $this->updatePayableStatusIfNeeded($payable);
-            }
 
             $this->activityLogService->log(
                 $payment->project,
@@ -197,17 +170,16 @@ class PaymentService
                 "Payment #{$payment->id} updated"
             );
 
-            return $payment->fresh(['user', 'payable']);
+            return $payment->fresh(['user', 'sale']);
         });
     }
 
     public function delete(Payment $payment): void
     {
         $project = $payment->project;
-        $payable = $payment->payable;
         $snapshot = $payment->toArray();
 
-        DB::transaction(function () use ($payment, $project, $payable, $snapshot) {
+        DB::transaction(function () use ($payment, $project, $snapshot) {
             $this->activityLogService->log(
                 $project,
                 'deleted',
@@ -219,33 +191,6 @@ class PaymentService
             );
 
             $payment->delete();
-
-            if ($payable) {
-                $this->updatePayableStatusIfNeeded($payable);
-            }
         });
-    }
-
-    protected function resolvePayable(string $type, int $id)
-    {
-        return match ($type) {
-            Expense::class => Expense::find($id),
-            Sale::class => Sale::find($id),
-            Order::class => Order::find($id),
-            default => null,
-        };
-    }
-
-    protected function updatePayableStatusIfNeeded($payable): void
-    {
-        if ($payable instanceof Expense) {
-            $totalPaid = (float) $payable->payments()
-                ->whereNotIn('status', ['failed', 'refunded'])
-                ->sum('amount');
-            $totalDue = (float) $payable->amount;
-            $payable->update([
-                'status' => $totalPaid >= $totalDue ? ExpenseStatus::Paid : ExpenseStatus::Pending,
-            ]);
-        }
     }
 }

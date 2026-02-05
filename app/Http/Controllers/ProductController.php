@@ -42,12 +42,12 @@ class ProductController extends Controller
                 'data' => $products->map(fn ($p) => [
                     'id' => $p->id,
                     'name' => $p->name,
-                    'barcode' => $p->barcode,
                     'description' => $p->description,
                     'price' => (float) $p->price,
                     'cost_price' => $p->cost_price ? (float) $p->cost_price : null,
                     'unit' => $p->unit,
                     'is_active' => $p->is_active,
+                    'minimum_stock' => (int) ($p->minimum_stock ?? 0),
                     'stock_quantity' => (int) ($p->stock_movements_sum_quantity ?? 0),
                     'category' => $p->category ? [
                         'id' => $p->category->id,
@@ -101,12 +101,12 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_category_id' => 'nullable|exists:product_categories,id',
             'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'unit' => 'nullable|string|max:20',
             'supplier_id' => 'nullable|exists:suppliers,id',
+            'minimum_stock' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
 
@@ -117,12 +117,12 @@ class ProductController extends Controller
             'project_id' => $project->id,
             'product_category_id' => $validated['product_category_id'] ?? null,
             'name' => $validated['name'],
-            'barcode' => $validated['barcode'] ?? null,
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'cost_price' => $validated['cost_price'] ?? null,
             'unit' => $validated['unit'] ?? 'pcs',
             'supplier_id' => $validated['supplier_id'] ?? null,
+            'minimum_stock' => $validated['minimum_stock'] ?? 0,
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -142,12 +142,12 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_category_id' => 'nullable|exists:product_categories,id',
             'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'unit' => 'nullable|string|max:20',
             'supplier_id' => 'nullable|exists:suppliers,id',
+            'minimum_stock' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
 
@@ -157,12 +157,12 @@ class ProductController extends Controller
         $product->update([
             'product_category_id' => $validated['product_category_id'] ?? null,
             'name' => $validated['name'],
-            'barcode' => $validated['barcode'] ?? null,
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'cost_price' => $validated['cost_price'] ?? null,
             'unit' => $validated['unit'] ?? 'pcs',
             'supplier_id' => $validated['supplier_id'] ?? null,
+            'minimum_stock' => $validated['minimum_stock'] ?? 0,
             'is_active' => $validated['is_active'] ?? true,
         ]);
 

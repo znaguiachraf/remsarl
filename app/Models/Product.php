@@ -17,7 +17,6 @@ class Product extends Model
         'project_id',
         'product_category_id',
         'name',
-        'barcode',
         'description',
         'price',
         'cost_price',
@@ -25,6 +24,7 @@ class Product extends Model
         'supplier_id',
         'image',
         'is_active',
+        'minimum_stock',
     ];
 
     protected $casts = [

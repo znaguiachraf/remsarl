@@ -119,13 +119,13 @@
 
 ### Module Tables (all have `project_id`)
 
-- **products** — name, sku, barcode, price, supplier_id, etc.
+- **products** — name, price, supplier_id, etc.
 - **suppliers** — name, contact_person, email, phone, address
 - **stock_movements** — product_id, type, quantity, reference
 - **orders** — order_number, status, supplier_id, total
 - **sales** — sale_number, status, total, source
 - **expenses** — category, description, amount, expense_date
-- **payments** — payable_type, payable_id, payment_method, amount
+- **payments** — sale_id, payment_method, amount (created automatically when sales are completed)
 - **tasks** — title, description, status, assignee_id, due_date
 - **pos_sessions** — user_id, opening_cash, status
 - **pos_transactions** — pos_session_id, sale_id, amount

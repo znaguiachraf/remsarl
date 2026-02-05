@@ -2,29 +2,23 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\BelongsToProject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class StockMovement extends Model
+class SaleItem extends Model
 {
-    use BelongsToProject;
-
     protected $fillable = [
-        'project_id',
-        'product_id',
         'sale_id',
-        'type',
+        'product_id',
         'quantity',
-        'unit_cost',
-        'reference',
-        'reason',
-        'user_id',
+        'unit_price',
+        'total',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
-        'unit_cost' => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total' => 'decimal:2',
     ];
 
     public function sale(): BelongsTo
@@ -35,10 +29,5 @@ class StockMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 }

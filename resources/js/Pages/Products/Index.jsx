@@ -24,24 +24,24 @@ export default function ProductsIndex({ project, products, categories, suppliers
     const createForm = useForm({
         product_category_id: '',
         name: '',
-        barcode: '',
         description: '',
         price: '',
         cost_price: '',
         unit: 'pcs',
         supplier_id: '',
+        minimum_stock: '0',
         is_active: true,
     });
 
     const editForm = useForm({
         product_category_id: '',
         name: '',
-        barcode: '',
         description: '',
         price: '',
         cost_price: '',
         unit: 'pcs',
         supplier_id: '',
+        minimum_stock: '0',
         is_active: true,
     });
 
@@ -67,12 +67,12 @@ export default function ProductsIndex({ project, products, categories, suppliers
         editForm.setData({
             product_category_id: product.category?.id?.toString() || '',
             name: product.name,
-            barcode: product.barcode || '',
             description: product.description || '',
             price: product.price.toString(),
             cost_price: product.cost_price != null ? product.cost_price.toString() : '',
             unit: product.unit || 'pcs',
             supplier_id: product.supplier?.id?.toString() || '',
+            minimum_stock: product.minimum_stock?.toString() || '0',
             is_active: product.is_active,
         });
     };
@@ -90,12 +90,12 @@ export default function ProductsIndex({ project, products, categories, suppliers
         router.patch(route('projects.modules.products.update', [project.id, product.id]), {
             product_category_id: product.category?.id?.toString() || '',
             name: product.name,
-            barcode: product.barcode || '',
             description: product.description || '',
             price: product.price,
             cost_price: product.cost_price ?? '',
             unit: product.unit || 'pcs',
             supplier_id: product.supplier?.id?.toString() || '',
+            minimum_stock: product.minimum_stock ?? 0,
             is_active: !product.is_active,
         }, { preserveScroll: true });
     };
@@ -194,12 +194,7 @@ export default function ProductsIndex({ project, products, categories, suppliers
                         {products?.data?.map((p) => (
                             <tr key={p.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4">
-                                    <div>
-                                        <div className="font-medium text-gray-900">{p.name}</div>
-                                        {p.barcode && (
-                                            <div className="text-sm text-gray-500">{p.barcode}</div>
-                                        )}
-                                    </div>
+                                    <div className="font-medium text-gray-900">{p.name}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {p.category ? (
@@ -303,14 +298,6 @@ export default function ProductsIndex({ project, products, categories, suppliers
                                 <InputError message={createForm.errors.name} />
                             </div>
                             <div>
-                                <InputLabel value="Barcode" />
-                                <TextInput
-                                    value={createForm.data.barcode}
-                                    onChange={(e) => createForm.setData('barcode', e.target.value)}
-                                    className="block w-full"
-                                />
-                            </div>
-                            <div>
                                 <InputLabel value="Description" />
                                 <textarea
                                     value={createForm.data.description}
@@ -376,6 +363,16 @@ export default function ProductsIndex({ project, products, categories, suppliers
                                     </select>
                                 </div>
                             </div>
+                            <div>
+                                <InputLabel value="Minimum Stock (alert threshold)" />
+                                <TextInput
+                                    type="number"
+                                    min="0"
+                                    value={createForm.data.minimum_stock}
+                                    onChange={(e) => createForm.setData('minimum_stock', e.target.value)}
+                                    className={inputClass}
+                                />
+                            </div>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
@@ -423,14 +420,6 @@ export default function ProductsIndex({ project, products, categories, suppliers
                                     required
                                 />
                                 <InputError message={editForm.errors.name} />
-                            </div>
-                            <div>
-                                <InputLabel value="Barcode" />
-                                <TextInput
-                                    value={editForm.data.barcode}
-                                    onChange={(e) => editForm.setData('barcode', e.target.value)}
-                                    className="block w-full"
-                                />
                             </div>
                             <div>
                                 <InputLabel value="Description" />
@@ -497,6 +486,16 @@ export default function ProductsIndex({ project, products, categories, suppliers
                                         ))}
                                     </select>
                                 </div>
+                            </div>
+                            <div>
+                                <InputLabel value="Minimum Stock (alert threshold)" />
+                                <TextInput
+                                    type="number"
+                                    min="0"
+                                    value={editForm.data.minimum_stock}
+                                    onChange={(e) => editForm.setData('minimum_stock', e.target.value)}
+                                    className={inputClass}
+                                />
                             </div>
                             <div className="flex items-center gap-2">
                                 <input

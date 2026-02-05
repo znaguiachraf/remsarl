@@ -12,9 +12,11 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectWorkerController;
 use Illuminate\Foundation\Application;
@@ -76,11 +78,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::prefix('modules/payments')->name('modules.payments.')->middleware('project.module:payments')->group(function () {
                 Route::get('/', [PaymentController::class, 'index'])->name('index');
-                Route::post('/', [PaymentController::class, 'store'])->name('store');
                 Route::patch('/{payment}', [PaymentController::class, 'update'])->name('update');
                 Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
                 Route::post('/{payment}/refund', [PaymentController::class, 'refund'])->name('refund');
                 Route::post('/{payment}/reinstate', [PaymentController::class, 'reinstate'])->name('reinstate');
+            });
+
+            Route::prefix('modules/stock')->name('modules.stock.')->middleware('project.module:stock')->group(function () {
+                Route::get('/', [StockController::class, 'index'])->name('index');
+                Route::get('/movements', [StockController::class, 'movements'])->name('movements');
+                Route::post('/{product}/adjust', [StockController::class, 'adjust'])->name('adjust');
             });
 
             Route::prefix('modules/products')->name('modules.products.')->middleware('project.module:products')->group(function () {
@@ -94,6 +101,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::patch('/{category}', [ProductCategoryController::class, 'update'])->name('update');
                     Route::delete('/{category}', [ProductCategoryController::class, 'destroy'])->name('destroy');
                 });
+            });
+
+            Route::prefix('modules/sales')->name('modules.sales.')->middleware('project.module:sales')->group(function () {
+                Route::get('/', [SaleController::class, 'index'])->name('index');
+                Route::get('/create', [SaleController::class, 'create'])->name('create');
+                Route::post('/', [SaleController::class, 'store'])->name('store');
+                Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
+                Route::post('/{sale}/pay', [SaleController::class, 'pay'])->name('pay');
             });
 
             Route::prefix('modules/expenses')->name('modules.expenses.')->middleware('project.module:expenses')->group(function () {

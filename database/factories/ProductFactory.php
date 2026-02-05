@@ -16,8 +16,6 @@ class ProductFactory extends Factory
         return [
             'project_id' => Project::factory(),
             'name' => fake()->words(3, true),
-            'sku' => strtoupper(fake()->unique()->bothify('???-####')),
-            'barcode' => fake()->optional()->ean13(),
             'description' => fake()->optional()->sentence(),
             'price' => fake()->randomFloat(2, 5, 500),
             'cost_price' => fake()->optional()->randomFloat(2, 2, 200),

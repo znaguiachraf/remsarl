@@ -11,18 +11,11 @@ import {
     IconDollar,
     IconDocument,
     IconPencil,
-    IconPlus,
     IconTag,
     IconTrash,
 } from '@/Components/expense/Icons';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-
-const PAYABLE_TYPES = {
-    'App\\Models\\Expense': 'Expense',
-    'App\\Models\\Sale': 'Sale',
-    'App\\Models\\Order': 'Order',
-};
 
 const statusColors = {
     paid: 'bg-emerald-100 text-emerald-800',
@@ -31,21 +24,10 @@ const statusColors = {
     refunded: 'bg-gray-100 text-gray-600',
 };
 
-export default function PaymentsIndex({ project, payments, filters, filterOptions, payables, can }) {
-    const [showCreateModal, setShowCreateModal] = useState(false);
+export default function PaymentsIndex({ project, payments, filters, filterOptions, can }) {
     const [viewingPayment, setViewingPayment] = useState(null);
     const [editingPayment, setEditingPayment] = useState(null);
     const [deletingPayment, setDeletingPayment] = useState(null);
-
-    const createForm = useForm({
-        payable_type: 'App\\Models\\Expense',
-        payable_id: '',
-        payment_method: 'cash',
-        amount: '',
-        reference: '',
-        payment_date: new Date().toISOString().slice(0, 10),
-        notes: '',
-    });
 
     const editForm = useForm({
         payment_method: 'cash',
@@ -59,17 +41,6 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
     const applyFilters = (newFilters) => {
         router.get(route('projects.modules.payments.index', project.id), newFilters, {
             preserveState: true,
-        });
-    };
-
-    const handleCreate = (e) => {
-        e.preventDefault();
-        createForm.post(route('projects.modules.payments.store', project.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                createForm.reset();
-                setShowCreateModal(false);
-            },
         });
     };
 
@@ -122,17 +93,6 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
     const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
     const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
 
-    const currentPayables = () => {
-        const type = createForm.data.payable_type;
-        if (type === 'App\\Models\\Expense') return payables?.expenses || [];
-        if (type === 'App\\Models\\Sale') return payables?.sales || [];
-        if (type === 'App\\Models\\Order') return payables?.orders || [];
-        return [];
-    };
-
-    const selectedPayable = currentPayables().find((p) => p.id.toString() === createForm.data.payable_id);
-    const maxAmount = selectedPayable ? selectedPayable.remaining : 0;
-
     return (
         <ProjectLayout
             header={
@@ -143,15 +103,9 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                         </div>
                         <div>
                             <h2 className="text-xl font-semibold leading-tight text-gray-800">Payments</h2>
-                            <p className="mt-0.5 text-sm text-gray-500">Track payments for Sales, POS, and Expenses</p>
+                            <p className="mt-0.5 text-sm text-gray-500">Payments from sales</p>
                         </div>
                     </div>
-                    {can?.create && (
-                        <PrimaryButton onClick={() => setShowCreateModal(true)}>
-                            <IconPlus className="h-4 w-4" />
-                            Add Payment
-                        </PrimaryButton>
-                    )}
                 </div>
             }
         >
@@ -173,18 +127,6 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                 </div>
                 <div className="flex items-center gap-2">
                     <IconTag className="text-gray-500" />
-                    <select
-                        value={filters?.payable_type || ''}
-                        onChange={(e) => applyFilters({ ...filters, payable_type: e.target.value || undefined })}
-                        className={selectClass + ' max-w-[160px]'}
-                    >
-                        <option value="">All entities</option>
-                        {filterOptions?.payable_types?.map((pt) => (
-                            <option key={pt.value} value={pt.value}>{pt.label}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="flex items-center gap-2">
                     <select
                         value={filters?.payment_method || ''}
                         onChange={(e) => applyFilters({ ...filters, payment_method: e.target.value || undefined })}
@@ -219,7 +161,7 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Entity</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Sale</th>
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Method</th>
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
@@ -231,7 +173,7 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                         {payments?.data?.map((p) => (
                             <tr key={p.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.payment_date}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.payable_label}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.sale_label}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <IconDollar className="inline h-4 w-4 text-gray-400" /> {Number(p.amount).toLocaleString()}
                                 </td>
@@ -299,115 +241,10 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                             <IconCreditCard className="h-7 w-7" />
                         </div>
                         <p className="font-medium">No payments yet.</p>
-                        <p className="mt-1 text-sm">Payments from expenses, sales, or orders will appear here.</p>
+                        <p className="mt-1 text-sm">Payments are created automatically when sales are completed.</p>
                     </div>
                 )}
             </div>
-
-            {/* Create Payment Modal */}
-            {showCreateModal && (
-                <Modal show onClose={() => setShowCreateModal(false)} maxWidth="md">
-                    <form onSubmit={handleCreate} className="p-6">
-                        <h3 className="text-lg font-medium text-gray-900">Record Payment</h3>
-                        <div className="mt-4 space-y-4">
-                            <div>
-                                <InputLabel value="Entity Type" />
-                                <select
-                                    value={createForm.data.payable_type}
-                                    onChange={(e) => {
-                                        createForm.setData({ ...createForm.data, payable_type: e.target.value, payable_id: '' });
-                                    }}
-                                    className={selectClass + ' w-full'}
-                                >
-                                    {Object.entries(PAYABLE_TYPES).map(([val, label]) => (
-                                        <option key={val} value={val}>{label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <InputLabel value="Item" />
-                                <select
-                                    value={createForm.data.payable_id}
-                                    onChange={(e) => createForm.setData('payable_id', e.target.value)}
-                                    className={selectClass + ' w-full'}
-                                >
-                                    <option value="">Select...</option>
-                                    {currentPayables().map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            #{p.id} - {p.reference || p.description} (Remaining: {Number(p.remaining).toLocaleString()})
-                                        </option>
-                                    ))}
-                                </select>
-                                {currentPayables().length === 0 && (
-                                    <p className="mt-1 text-sm text-amber-600">No items with balance due.</p>
-                                )}
-                            </div>
-                            <div>
-                                <InputLabel value="Amount" />
-                                <TextInput
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max={maxAmount}
-                                    value={createForm.data.amount}
-                                    onChange={(e) => createForm.setData('amount', e.target.value)}
-                                    className="block w-full"
-                                />
-                                {selectedPayable && (
-                                    <p className="mt-1 text-xs text-gray-500">Max: {Number(maxAmount).toLocaleString()}</p>
-                                )}
-                                <InputError message={createForm.errors.amount} />
-                            </div>
-                            <div>
-                                <InputLabel value="Payment Method" />
-                                <select
-                                    value={createForm.data.payment_method}
-                                    onChange={(e) => createForm.setData('payment_method', e.target.value)}
-                                    className={selectClass + ' w-full'}
-                                >
-                                    {filterOptions?.payment_methods?.map((m) => (
-                                        <option key={m} value={m}>{m}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <InputLabel value="Reference" />
-                                <TextInput
-                                    value={createForm.data.reference}
-                                    onChange={(e) => createForm.setData('reference', e.target.value)}
-                                    className="block w-full"
-                                />
-                            </div>
-                            <div>
-                                <InputLabel value="Payment Date" />
-                                <TextInput
-                                    type="date"
-                                    value={createForm.data.payment_date}
-                                    onChange={(e) => createForm.setData('payment_date', e.target.value)}
-                                    className="block w-full"
-                                />
-                            </div>
-                            <div>
-                                <InputLabel value="Notes" />
-                                <textarea
-                                    value={createForm.data.notes}
-                                    onChange={(e) => createForm.setData('notes', e.target.value)}
-                                    rows={2}
-                                    className={inputClass + ' w-full'}
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-2">
-                            <SecondaryButton type="button" onClick={() => setShowCreateModal(false)}>
-                                Cancel
-                            </SecondaryButton>
-                            <PrimaryButton type="submit" disabled={createForm.processing}>
-                                Record Payment
-                            </PrimaryButton>
-                        </div>
-                    </form>
-                </Modal>
-            )}
 
             {/* View Payment Modal */}
             {viewingPayment && (
@@ -420,8 +257,8 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                                 <dd className="mt-1 text-sm text-gray-900">{viewingPayment.payment_date}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm font-medium text-gray-500">Entity</dt>
-                                <dd className="mt-1 text-sm text-gray-900">{viewingPayment.payable_label}</dd>
+                                <dt className="text-sm font-medium text-gray-500">Sale</dt>
+                                <dd className="mt-1 text-sm text-gray-900">{viewingPayment.sale_label}</dd>
                             </div>
                             <div>
                                 <dt className="text-sm font-medium text-gray-500">Amount</dt>
@@ -515,7 +352,7 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                 <Modal show onClose={() => setEditingPayment(null)} maxWidth="md">
                     <form onSubmit={handleUpdate} className="p-6">
                         <h3 className="text-lg font-medium text-gray-900">Edit Payment</h3>
-                        <p className="mt-1 text-sm text-gray-500">{editingPayment.payable_label}</p>
+                        <p className="mt-1 text-sm text-gray-500">{editingPayment.sale_label}</p>
                         <div className="mt-4 space-y-4">
                             <div>
                                 <InputLabel value="Amount" />
@@ -598,11 +435,11 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                     <div className="p-6">
                         <h3 className="text-lg font-medium text-gray-900">Delete Payment</h3>
                         <p className="mt-2 text-sm text-gray-600">
-                            Are you sure you want to delete this payment? This will remove the payment record and may affect the status of the linked {deletingPayment.payable_type_label} #{deletingPayment.payable_id}.
+                            Are you sure you want to delete this payment? This will remove the payment record from Sale {deletingPayment.sale_label}.
                         </p>
                         <div className="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
                             <p><strong>Amount:</strong> {Number(deletingPayment.amount).toLocaleString()}</p>
-                            <p><strong>Entity:</strong> {deletingPayment.payable_label}</p>
+                            <p><strong>Sale:</strong> {deletingPayment.sale_label}</p>
                             <p><strong>Date:</strong> {deletingPayment.payment_date}</p>
                         </div>
                         <div className="mt-6 flex justify-end gap-2">
