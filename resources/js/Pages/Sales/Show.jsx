@@ -11,7 +11,7 @@ import {
     IconDollar,
     IconPlus,
 } from '@/Components/expense/Icons';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const paymentStatusColors = {
@@ -23,6 +23,8 @@ const paymentStatusColors = {
 };
 
 export default function SalesShow({ project, sale, can }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showPayModal, setShowPayModal] = useState(false);
 
     const payForm = useForm({
@@ -49,8 +51,8 @@ export default function SalesShow({ project, sale, can }) {
         payForm.setData('amount', sale?.remaining?.toString() || '');
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     if (!sale) return null;
 
@@ -128,10 +130,6 @@ export default function SalesShow({ project, sale, can }) {
                             <div className="flex justify-between text-sm">
                                 <dt className="text-gray-600">Discount</dt>
                                 <dd>-{Number(sale.discount).toLocaleString()}</dd>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <dt className="text-gray-600">Tax</dt>
-                                <dd>{Number(sale.tax).toLocaleString()}</dd>
                             </div>
                             <div className="flex justify-between border-t border-gray-200 pt-2 font-medium">
                                 <dt>Total</dt>

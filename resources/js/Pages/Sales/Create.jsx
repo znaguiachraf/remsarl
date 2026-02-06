@@ -35,7 +35,7 @@ export default function SalesCreate({ project, products }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const [formData, setFormData] = useState({ discount: '0', tax: '0' });
+    const [formData, setFormData] = useState({ discount: '0' });
 
     const addLine = () => {
         setLineItems([...lineItems, { product_id: '', quantity: 1, unit_price: '' }]);
@@ -87,8 +87,7 @@ export default function SalesCreate({ project, products }) {
         return sum + (line.quantity || 0) * price;
     }, 0);
     const discount = parseFloat(formData.discount) || 0;
-    const tax = parseFloat(formData.tax) || 0;
-    const total = subtotal - discount + tax;
+    const total = subtotal - discount;
     const paymentsTotal = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
     const handleSubmit = (e) => {
@@ -125,7 +124,6 @@ export default function SalesCreate({ project, products }) {
         router.post(route('projects.modules.sales.store', project.id), {
             items: validItems,
             discount: discount.toString(),
-            tax: tax.toString(),
             payments: validPayments,
         }, {
             preserveScroll: true,
@@ -134,8 +132,9 @@ export default function SalesCreate({ project, products }) {
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     return (
         <ProjectLayout
@@ -241,7 +240,8 @@ export default function SalesCreate({ project, products }) {
                         <button
                             type="button"
                             onClick={addLine}
-                            className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                            className="flex items-center gap-2 text-sm font-medium transition hover:opacity-80"
+                            style={{ color: primaryColor }}
                         >
                             <IconPlus className="h-4 w-4" /> Add line
                         </button>
@@ -270,17 +270,6 @@ export default function SalesCreate({ project, products }) {
                                 min="0"
                                 value={formData.discount}
                                 onChange={(e) => setFormData((prev) => ({ ...prev, discount: e.target.value }))}
-                                className="block w-24"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <InputLabel value="Tax" />
-                            <TextInput
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={formData.tax}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, tax: e.target.value }))}
                                 className="block w-24"
                             />
                         </div>
@@ -355,7 +344,8 @@ export default function SalesCreate({ project, products }) {
                         <button
                             type="button"
                             onClick={addPayment}
-                            className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                            className="flex items-center gap-2 text-sm font-medium transition hover:opacity-80"
+                            style={{ color: primaryColor }}
                         >
                             <IconPlus className="h-4 w-4" /> Add payment
                         </button>

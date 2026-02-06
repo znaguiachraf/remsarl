@@ -92,7 +92,6 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
-            'tax' => 'nullable|numeric|min:0',
             'payments' => 'nullable|array',
             'payments.*.payment_method' => 'required|string|in:cash,card,transfer,check,other',
             'payments.*.amount' => 'required|numeric|min:0.01',
@@ -103,8 +102,7 @@ class SaleController extends Controller
         $items = $validated['items'];
         $subtotal = collect($items)->sum(fn ($i) => $i['quantity'] * $i['unit_price']);
         $discount = (float) ($validated['discount'] ?? 0);
-        $tax = (float) ($validated['tax'] ?? 0);
-        $total = $subtotal - $discount + $tax;
+        $total = $subtotal - $discount;
 
         $payments = array_map(fn ($p) => [
             'payment_method' => $p['payment_method'],
@@ -118,7 +116,7 @@ class SaleController extends Controller
         $sale = $this->saleService->create($project, [
             'subtotal' => $subtotal,
             'discount' => $discount,
-            'tax' => $tax,
+            'tax' => 0,
             'total' => $total,
             'source' => 'manual',
         ], $items, $payments);

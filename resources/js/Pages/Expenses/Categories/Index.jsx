@@ -14,10 +14,12 @@ import {
     IconSwatch,
     IconDocument,
 } from '@/Components/expense/Icons';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function ExpenseCategoriesIndex({ project, categories }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
 
@@ -75,14 +77,17 @@ export default function ExpenseCategoriesIndex({ project, categories }) {
         }
     };
 
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     return (
         <ProjectLayout
             header={
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                        <div
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                            style={{ backgroundColor: `${primaryColor}26`, color: primaryColor }}
+                        >
                             <IconFolder className="h-5 w-5" />
                         </div>
                         <div>
@@ -148,7 +153,8 @@ export default function ExpenseCategoriesIndex({ project, categories }) {
                                         <button
                                             type="button"
                                             onClick={() => openEditModal(category)}
-                                            className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                            className="inline-flex items-center gap-1.5 text-sm font-medium transition hover:opacity-80"
+                                            style={{ color: primaryColor }}
                                         >
                                             <IconPencil className="h-4 w-4" />Edit
                                         </button>

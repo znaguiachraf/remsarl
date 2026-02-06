@@ -20,7 +20,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        return $user->hasProjectAccess($project);
+        return $user->isAdmin() || $user->hasProjectAccess($project);
     }
 
     /**
@@ -37,7 +37,9 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        return $user->isOwnerOf($project) || $user->roleOnProject($project)?->hasPermission('projects.update') ?? false;
+        return $user->isAdmin()
+            || $user->isOwnerOf($project)
+            || ($user->roleOnProject($project)?->hasPermission('projects.update') ?? false);
     }
 
     /**

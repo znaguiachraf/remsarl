@@ -21,8 +21,11 @@ class DashboardController extends Controller
             'roles' => Role::count(),
         ];
 
+        $projects = Project::orderBy('name')->get(['id', 'name', 'primary_color', 'secondary_color']);
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
+            'projects' => $projects,
         ]);
     }
 }

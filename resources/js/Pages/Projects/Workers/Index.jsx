@@ -3,10 +3,12 @@ import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/project/StatusBadge';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function WorkersIndex({ project, workers, roles }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showAddModal, setShowAddModal] = useState(false);
     const [showRoleModal, setShowRoleModal] = useState(false);
     const [editingWorker, setEditingWorker] = useState(null);
@@ -112,7 +114,8 @@ export default function WorkersIndex({ project, workers, roles }) {
                                         <button
                                             type="button"
                                             onClick={() => openRoleModal(worker)}
-                                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                            className="text-sm font-medium transition hover:opacity-80"
+                                            style={{ color: primaryColor }}
                                         >
                                             Change Role
                                         </button>
@@ -149,7 +152,7 @@ export default function WorkersIndex({ project, workers, roles }) {
                             <select
                                 value={roleForm.data.role_id}
                                 onChange={(e) => roleForm.setData('role_id', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`}
                                 required
                             >
                                 <option value="">Select role</option>
@@ -191,7 +194,7 @@ export default function WorkersIndex({ project, workers, roles }) {
                                         type="email"
                                         required
                                         value={addForm.data.email}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`}
                                         placeholder="user@example.com"
                                         onChange={(e) => addForm.setData('email', e.target.value)}
                                     />
@@ -204,7 +207,7 @@ export default function WorkersIndex({ project, workers, roles }) {
                                     <select
                                         value={addForm.data.role_id}
                                         onChange={(e) => addForm.setData('role_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`}
                                         required
                                     >
                                         <option value="">Select role</option>

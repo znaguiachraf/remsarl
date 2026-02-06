@@ -6,7 +6,7 @@ import {
     IconPlus,
     IconTag,
 } from '@/Components/expense/Icons';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 
 const paymentStatusColors = {
     unpaid: 'bg-red-100 text-red-800',
@@ -17,14 +17,16 @@ const paymentStatusColors = {
 };
 
 export default function SalesIndex({ project, sales, filters, can }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const applyFilters = (newFilters) => {
         router.get(route('projects.modules.sales.index', project.id), newFilters, {
             preserveState: true,
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     return (
         <ProjectLayout
@@ -42,7 +44,8 @@ export default function SalesIndex({ project, sales, filters, can }) {
                     {can?.create && (
                         <Link
                             href={route('projects.modules.sales.create', project.id)}
-                            className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                            style={{ backgroundColor: primaryColor }}
                         >
                             <IconPlus className="h-4 w-4" />
                             New Sale
@@ -116,7 +119,8 @@ export default function SalesIndex({ project, sales, filters, can }) {
                                 <td className="px-6 py-4">
                                     <Link
                                         href={route('projects.modules.sales.show', [project.id, s.id])}
-                                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                                        className="font-medium transition hover:opacity-80"
+                                        style={{ color: primaryColor }}
                                     >
                                         {s.sale_number}
                                     </Link>
@@ -139,7 +143,8 @@ export default function SalesIndex({ project, sales, filters, can }) {
                                 <td className="px-6 py-4 whitespace-nowrap text-right">
                                     <Link
                                         href={route('projects.modules.sales.show', [project.id, s.id])}
-                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                        className="text-sm font-medium transition hover:opacity-80"
+                                        style={{ color: primaryColor }}
                                     >
                                         <IconDocument className="inline h-4 w-4" /> View
                                     </Link>
@@ -158,7 +163,8 @@ export default function SalesIndex({ project, sales, filters, can }) {
                         {can?.create && (
                             <Link
                                 href={route('projects.modules.sales.create', project.id)}
-                                className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                className="mt-4 text-sm font-medium transition hover:opacity-80"
+                                style={{ color: primaryColor }}
                             >
                                 New Sale →
                             </Link>
@@ -177,7 +183,8 @@ export default function SalesIndex({ project, sales, filters, can }) {
                             <Link
                                 key={i}
                                 href={link.url || '#'}
-                                className={`rounded px-3 py-1 text-sm ${link.active ? 'bg-indigo-100 text-indigo-800 font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                className={`rounded px-3 py-1 text-sm ${link.active ? 'font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                style={link.active ? { backgroundColor: `${primaryColor}26`, color: primaryColor } : {}}
                             >
                                 {link.label}
                             </Link>

@@ -13,10 +13,12 @@ import {
     IconTag,
     IconTrash,
 } from '@/Components/expense/Icons';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function ProductsIndex({ project, products, categories, suppliers, filters, can }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [deletingProduct, setDeletingProduct] = useState(null);
@@ -107,8 +109,8 @@ export default function ProductsIndex({ project, products, categories, suppliers
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     return (
         <ProjectLayout
@@ -222,7 +224,8 @@ export default function ProductsIndex({ project, products, categories, suppliers
                                         type="button"
                                         onClick={() => handleToggleStatus(p)}
                                         disabled={!p.can_update}
-                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${p.is_active ? 'bg-indigo-600' : 'bg-gray-200'} ${!p.can_update && 'cursor-not-allowed opacity-60'}`}
+                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--project-primary)] focus:ring-offset-2 ${p.is_active ? '' : 'bg-gray-200'} ${!p.can_update && 'cursor-not-allowed opacity-60'}`}
+                                        style={p.is_active ? { backgroundColor: primaryColor } : {}}
                                         role="switch"
                                         aria-checked={p.is_active}
                                     >
@@ -237,7 +240,8 @@ export default function ProductsIndex({ project, products, categories, suppliers
                                             <button
                                                 type="button"
                                                 onClick={() => openEditModal(p)}
-                                                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                                className="text-sm font-medium transition hover:opacity-80"
+                                                style={{ color: primaryColor }}
                                             >
                                                 <IconPencil className="inline h-4 w-4" /> Edit
                                             </button>
@@ -547,7 +551,8 @@ export default function ProductsIndex({ project, products, categories, suppliers
                             <Link
                                 key={i}
                                 href={link.url || '#'}
-                                className={`rounded px-3 py-1 text-sm ${link.active ? 'bg-indigo-100 text-indigo-800 font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                className={`rounded px-3 py-1 text-sm ${link.active ? 'font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                style={link.active ? { backgroundColor: `${primaryColor}26`, color: primaryColor } : {}}
                             >
                                 {link.label}
                             </Link>

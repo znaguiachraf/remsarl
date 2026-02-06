@@ -9,7 +9,7 @@ import {
     IconFolder,
     IconPencil,
 } from '@/Components/expense/Icons';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const IconArchive = ({ className = '' }) => (
@@ -25,6 +25,8 @@ const IconHistory = ({ className = '' }) => (
 );
 
 export default function StockIndex({ project, products, categories, filters, can }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [adjustingProduct, setAdjustingProduct] = useState(null);
 
     const adjustForm = useForm({
@@ -54,15 +56,18 @@ export default function StockIndex({ project, products, categories, filters, can
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     return (
         <ProjectLayout
             header={
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                        <div
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                            style={{ backgroundColor: `${primaryColor}26`, color: primaryColor }}
+                        >
                             <IconArchive className="h-5 w-5" />
                         </div>
                         <div>
@@ -183,7 +188,8 @@ export default function StockIndex({ project, products, categories, filters, can
                                         <button
                                             type="button"
                                             onClick={() => openAdjustModal(p)}
-                                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                            className="text-sm font-medium transition hover:opacity-80"
+                                            style={{ color: primaryColor }}
                                         >
                                             <IconPencil className="inline h-4 w-4" /> Adjust
                                         </button>
@@ -202,7 +208,8 @@ export default function StockIndex({ project, products, categories, filters, can
                         <p className="mt-1 text-sm">Add products in the Products module to track stock.</p>
                         <Link
                             href={route('projects.modules.products.index', project.id)}
-                            className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                            className="mt-4 text-sm font-medium transition hover:opacity-80"
+                            style={{ color: primaryColor }}
                         >
                             Go to Products →
                         </Link>
@@ -263,7 +270,8 @@ export default function StockIndex({ project, products, categories, filters, can
                             <Link
                                 key={i}
                                 href={link.url || '#'}
-                                className={`rounded px-3 py-1 text-sm ${link.active ? 'bg-indigo-100 text-indigo-800 font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                className={`rounded px-3 py-1 text-sm ${link.active ? 'font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                style={link.active ? { backgroundColor: `${primaryColor}26`, color: primaryColor } : {}}
                             >
                                 {link.label}
                             </Link>

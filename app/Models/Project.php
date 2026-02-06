@@ -23,6 +23,7 @@ class Project extends Model
         'address',
         'phone',
         'description',
+        'type',
         'city',
         'country',
         'status',

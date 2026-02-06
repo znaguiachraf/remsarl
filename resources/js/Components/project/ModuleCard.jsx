@@ -49,23 +49,23 @@ export default function ModuleCard({ module, href, primaryColor = '#3B82F6' }) {
     return (
         <Link
             href={href}
-            className="group flex flex-col rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-200 hover:shadow-md hover:-translate-y-0.5"
+            className="group flex min-h-[100px] flex-col rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 active:scale-[0.98] hover:border-gray-200 hover:shadow-md hover:-translate-y-0.5 touch-manipulation sm:min-h-0 sm:p-5 sm:active:scale-100"
         >
             <div
-                className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-transform duration-200 group-hover:scale-105"
+                className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition-transform duration-200 group-hover:scale-105 sm:mb-4 sm:h-11 sm:w-11 sm:rounded-xl"
                 style={{ backgroundColor: primaryColor }}
             >
                 <ModuleIcon icon={module.icon} />
             </div>
-            <h3 className="font-semibold text-gray-900 transition-colors group-hover:text-gray-700">
+            <h3 className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-gray-700 sm:text-base">
                 {module.name}
             </h3>
-            <p className="mt-1 text-sm text-gray-500 capitalize">{module.key}</p>
-            <div className="mt-auto pt-4">
-                <span className="inline-flex items-center gap-1 text-sm font-medium transition-colors group-hover:text-gray-700" style={{ color: primaryColor }}>
+            <p className="mt-0.5 truncate text-xs text-gray-500 capitalize sm:mt-1 sm:text-sm">{module.key}</p>
+            <div className="mt-auto pt-2 sm:pt-4">
+                <span className="inline-flex items-center gap-0.5 text-xs font-medium transition-colors group-hover:text-gray-700 sm:gap-1 sm:text-sm" style={{ color: primaryColor }}>
                     Open
                     <svg
-                        className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                        className="h-3 w-3 transition-transform group-hover:translate-x-0.5 sm:h-4 sm:w-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

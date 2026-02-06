@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             TaskSeeder::class,
             ActivityLogSeeder::class,
+            FurnitureProjectSeeder::class,
         ]);
     }
 }

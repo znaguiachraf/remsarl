@@ -5,7 +5,7 @@ import {
     IconFolder,
     IconTag,
 } from '@/Components/expense/Icons';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 
 const IconArchive = ({ className = '' }) => (
     <svg className={`h-5 w-5 shrink-0 ${className}`.trim()} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,14 +14,16 @@ const IconArchive = ({ className = '' }) => (
 );
 
 export default function StockMovements({ project, movements, products, filters }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const applyFilters = (newFilters) => {
         router.get(route('projects.modules.stock.movements', project.id), newFilters, {
             preserveState: true,
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     const typeColors = {
         in: 'bg-emerald-100 text-emerald-800',
@@ -40,7 +42,10 @@ export default function StockMovements({ project, movements, products, filters }
                         >
                             <IconArrowLeft className="h-5 w-5" />
                         </Link>
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                        <div
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                            style={{ backgroundColor: `${primaryColor}26`, color: primaryColor }}
+                        >
                             <IconArchive className="h-5 w-5" />
                         </div>
                         <div>
@@ -162,7 +167,8 @@ export default function StockMovements({ project, movements, products, filters }
                             <Link
                                 key={i}
                                 href={link.url || '#'}
-                                className={`rounded px-3 py-1 text-sm ${link.active ? 'bg-indigo-100 text-indigo-800 font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                className={`rounded px-3 py-1 text-sm ${link.active ? 'font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                style={link.active ? { backgroundColor: `${primaryColor}26`, color: primaryColor } : {}}
                             >
                                 {link.label}
                             </Link>
