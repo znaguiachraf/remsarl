@@ -80,7 +80,7 @@ class ProjectController extends Controller
         return redirect()->route('projects.show', $project)->with('success', 'Project created successfully.');
     }
 
-    public function show(Project $project): Response
+    public function show(Request $request, Project $project): Response
     {
         $this->authorize('view', $project);
 
@@ -94,6 +94,9 @@ class ProjectController extends Controller
                 'secondary_color' => $project->secondary_color,
                 'status' => $project->status->value,
                 'description' => $project->description,
+            ],
+            'can' => [
+                'update' => $request->user()->can('update', $project),
             ],
         ]);
     }

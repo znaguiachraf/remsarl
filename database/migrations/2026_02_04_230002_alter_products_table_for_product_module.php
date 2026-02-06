@@ -8,14 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->foreignId('product_category_id')->nullable()->after('project_id')
-                ->constrained('product_categories')->nullOnDelete();
-        });
+        if (!Schema::hasColumn('products', 'product_category_id')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->foreignId('product_category_id')->nullable()->after('project_id')
+                    ->constrained('product_categories')->nullOnDelete();
+            });
+        }
 
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('sku');
-        });
+        if (Schema::hasColumn('products', 'sku')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->dropColumn('sku');
+            });
+        }
     }
 
     public function down(): void

@@ -2,10 +2,10 @@ import AdminIcon from '@/Components/AdminIcon';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function AdminDashboard({ stats }) {
+export default function AdminDashboard({ stats, projects = [] }) {
     const cards = [
         { label: 'Users', value: stats?.users ?? 0, href: route('admin.users.index'), icon: 'users' },
-        { label: 'Projects', value: stats?.projects ?? 0, href: null, icon: 'projects' },
+        { label: 'Projects', value: stats?.projects ?? 0, href: route('admin.modules.index'), icon: 'projects' },
         { label: 'Assignments', value: stats?.assignments ?? 0, href: route('admin.workers.index'), icon: 'workers' },
         { label: 'Modules', value: stats?.projects ?? 0, href: route('admin.modules.index'), icon: 'modules' },
         { label: 'Roles', value: stats?.roles ?? 0, href: route('admin.roles.index'), icon: 'roles' },
@@ -47,6 +47,31 @@ export default function AdminDashboard({ stats }) {
                     </div>
                 ))}
             </div>
+
+            {projects?.length > 0 && (
+                <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-gray-900">Edit Project Colors</h2>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Customize primary and secondary colors for each project.
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                        {projects.map((p) => (
+                            <Link
+                                key={p.id}
+                                href={route('admin.projects.edit', p.id)}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+                            >
+                                <span
+                                    className="h-4 w-4 rounded-full border border-gray-200"
+                                    style={{ backgroundColor: p.primary_color || '#3B82F6' }}
+                                />
+                                {p.name}
+                                <span className="text-indigo-600">Edit colors</span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }

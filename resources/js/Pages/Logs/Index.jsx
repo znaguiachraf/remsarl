@@ -6,10 +6,12 @@ import {
     IconDocument,
     IconTag,
 } from '@/Components/expense/Icons';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function LogsIndex({ project, logs, filters, filterOptions }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [selectedLog, setSelectedLog] = useState(null);
     const applyFilters = (newFilters) => {
         router.get(route('projects.modules.logs.index', project.id), newFilters, {
@@ -17,8 +19,8 @@ export default function LogsIndex({ project, logs, filters, filterOptions }) {
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     const actionColors = {
         created: 'bg-emerald-100 text-emerald-800',
@@ -148,7 +150,8 @@ export default function LogsIndex({ project, logs, filters, filterOptions }) {
                                     <button
                                         type="button"
                                         onClick={() => setSelectedLog(log)}
-                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium transition hover:opacity-80"
+                                        style={{ color: primaryColor }}
                                     >
                                         <IconDocument className="h-4 w-4" />
                                         View
@@ -242,7 +245,8 @@ export default function LogsIndex({ project, logs, filters, filterOptions }) {
                             <Link
                                 key={i}
                                 href={link.url || '#'}
-                                className={`rounded px-3 py-1 text-sm ${link.active ? 'bg-indigo-100 text-indigo-800 font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                className={`rounded px-3 py-1 text-sm ${link.active ? 'font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                style={link.active ? { backgroundColor: `${primaryColor}26`, color: primaryColor } : {}}
                             >
                                 {link.label}
                             </Link>

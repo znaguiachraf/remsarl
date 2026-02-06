@@ -14,7 +14,7 @@ import {
     IconTag,
     IconTrash,
 } from '@/Components/expense/Icons';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const statusColors = {
@@ -25,6 +25,8 @@ const statusColors = {
 };
 
 export default function PaymentsIndex({ project, payments, filters, filterOptions, can }) {
+    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [viewingPayment, setViewingPayment] = useState(null);
     const [editingPayment, setEditingPayment] = useState(null);
     const [deletingPayment, setDeletingPayment] = useState(null);
@@ -90,8 +92,8 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
         });
     };
 
-    const selectClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
-    const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
+    const inputClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
 
     return (
         <ProjectLayout
@@ -189,7 +191,8 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                                         <button
                                             type="button"
                                             onClick={() => setViewingPayment(p)}
-                                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                            className="text-sm font-medium transition hover:opacity-80"
+                                            style={{ color: primaryColor }}
                                         >
                                             <IconDocument className="inline h-4 w-4" /> View
                                         </button>
@@ -468,7 +471,8 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                             <Link
                                 key={i}
                                 href={link.url || '#'}
-                                className={`rounded px-3 py-1 text-sm ${link.active ? 'bg-indigo-100 text-indigo-800 font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                className={`rounded px-3 py-1 text-sm ${link.active ? 'font-medium' : 'text-gray-600 hover:bg-gray-100'} ${!link.url && 'pointer-events-none opacity-50'}`}
+                                style={link.active ? { backgroundColor: `${primaryColor}26`, color: primaryColor } : {}}
                             >
                                 {link.label}
                             </Link>

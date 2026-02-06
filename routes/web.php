@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ModuleController as AdminModuleController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockController;
@@ -51,6 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
         Route::get('/modules/{project}/edit', [AdminModuleController::class, 'edit'])->name('modules.edit');
         Route::patch('/modules/{project}', [AdminModuleController::class, 'update'])->name('modules.update');
+        Route::get('/projects/{project}/edit', [AdminProjectController::class, 'edit'])->name('projects.edit');
+        Route::patch('/projects/{project}', [AdminProjectController::class, 'update'])->name('projects.update');
     });
 
     Route::prefix('projects')->name('projects.')->group(function () {
@@ -60,8 +64,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::prefix('{project}')->middleware('project.access')->group(function () {
             Route::get('/', [ProjectController::class, 'show'])->name('show');
-            Route::get('/edit', [ProjectController::class, 'edit'])->name('edit');
-            Route::patch('/', [ProjectController::class, 'update'])->name('update');
 
             Route::prefix('workers')->name('workers.')->group(function () {
                 Route::get('/', [ProjectWorkerController::class, 'index'])->name('index');
@@ -101,6 +103,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::patch('/{category}', [ProductCategoryController::class, 'update'])->name('update');
                     Route::delete('/{category}', [ProductCategoryController::class, 'destroy'])->name('destroy');
                 });
+            });
+
+            Route::prefix('modules/pos')->name('modules.pos.')->middleware('project.module:pos')->group(function () {
+                Route::get('/', [PosController::class, 'index'])->name('index');
+                Route::post('/session/open', [PosController::class, 'openSession'])->name('session.open');
+                Route::post('/session/{posSession}/close', [PosController::class, 'closeSession'])->name('session.close');
+                Route::post('/orders', [PosController::class, 'createOrder'])->name('orders.store');
+                Route::post('/orders/{order}/payments', [PosController::class, 'addPayment'])->name('orders.payments.store');
+                Route::post('/orders/{order}/complete', [PosController::class, 'completeOrder'])->name('orders.complete');
+                Route::post('/orders/{order}/cancel', [PosController::class, 'cancelOrder'])->name('orders.cancel');
             });
 
             Route::prefix('modules/sales')->name('modules.sales.')->middleware('project.module:sales')->group(function () {
