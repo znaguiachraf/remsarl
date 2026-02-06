@@ -33,6 +33,7 @@ class FurnitureProjectSeeder extends Seeder
 {
     public function run(): void
     {
+        $faker = \Faker\Factory::create();
         $owner = User::first();
         if (!$owner) {
             return;
@@ -139,10 +140,10 @@ class FurnitureProjectSeeder extends Seeder
             $suppliers[] = Supplier::create([
                 'project_id' => $project->id,
                 'name' => $name,
-                'contact_person' => fake()->name(),
+                'contact_person' => $faker->name(),
                 'email' => 'supplier' . $i . '-furniture@example.com',
-                'phone' => fake()->phoneNumber(),
-                'address' => fake()->address(),
+                'phone' => $faker->phoneNumber(),
+                'address' => $faker->address(),
                 'is_active' => true,
             ]);
         }
@@ -269,7 +270,7 @@ class FurnitureProjectSeeder extends Seeder
                 'project_id' => $project->id,
                 'expense_category_id' => $expenseCategories[array_rand($expenseCategories)]->id,
                 'reference' => 'EXP-' . str_pad($i, 3, '0'),
-                'description' => fake()->sentence(),
+                'description' => $faker->sentence(),
                 'amount' => rand(100, 2000),
                 'status' => $i <= 5 ? ExpenseStatus::Paid : ExpenseStatus::Pending,
                 'expense_date' => now()->subDays(rand(1, 60)),
@@ -283,7 +284,7 @@ class FurnitureProjectSeeder extends Seeder
             Task::create([
                 'project_id' => $project->id,
                 'title' => $title,
-                'description' => fake()->sentence(),
+                'description' => $faker->sentence(),
                 'status' => ['pending', 'in_progress', 'completed'][$i % 3],
                 'priority' => ['low', 'medium', 'high'][$i % 3],
                 'assignee_id' => $otherUsers->isEmpty() ? $owner->id : $otherUsers->random()->id,
@@ -377,7 +378,7 @@ class FurnitureProjectSeeder extends Seeder
                 'loggable_type' => $lg['type'],
                 'loggable_id' => $lg['id'],
                 'module' => ['products', 'sales', 'expenses', 'payments', 'stock'][array_rand(['products', 'sales', 'expenses', 'payments', 'stock'])],
-                'description' => fake()->sentence(),
+                'description' => $faker->sentence(),
             ]);
         }
     }
