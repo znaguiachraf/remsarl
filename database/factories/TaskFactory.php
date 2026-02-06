@@ -15,13 +15,13 @@ class TaskFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
-            'title' => fake()->sentence(4),
-            'description' => fake()->optional()->paragraph(),
-            'status' => fake()->randomElement(['todo', 'in_progress', 'done']),
-            'priority' => fake()->randomElement(['low', 'medium', 'high']),
+            'title' => $this->faker->sentence(4),
+            'description' => $this->faker->optional()->paragraph(),
+            'status' => $this->faker->randomElement(['todo', 'in_progress', 'done']),
+            'priority' => $this->faker->randomElement(['low', 'medium', 'high']),
             'assignee_id' => null,
             'created_by' => null,
-            'due_date' => fake()->optional()->dateTimeBetween('now', '+1 month'),
+            'due_date' => $this->faker->optional()->dateTimeBetween('now', '+1 month'),
             'completed_at' => null,
         ];
     }

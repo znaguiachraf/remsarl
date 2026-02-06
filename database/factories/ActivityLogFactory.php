@@ -16,15 +16,15 @@ class ActivityLogFactory extends Factory
         return [
             'project_id' => Project::factory(),
             'user_id' => User::factory(),
-            'action' => fake()->randomElement(['created', 'updated', 'deleted', 'viewed']),
-            'loggable_type' => fake()->randomElement(['App\\Models\\Product', 'App\\Models\\Task', 'App\\Models\\Project']),
-            'loggable_id' => fake()->numberBetween(1, 100),
+            'action' => $this->faker->randomElement(['created', 'updated', 'deleted', 'viewed']),
+            'loggable_type' => $this->faker->randomElement(['App\\Models\\Product', 'App\\Models\\Task', 'App\\Models\\Project']),
+            'loggable_id' => $this->faker->numberBetween(1, 100),
             'old_values' => null,
             'new_values' => null,
-            'ip_address' => fake()->ipv4(),
-            'user_agent' => fake()->userAgent(),
-            'module' => fake()->randomElement(['products', 'tasks', 'pos', 'sales']),
-            'description' => fake()->sentence(),
+            'ip_address' => $this->faker->ipv4(),
+            'user_agent' => $this->faker->userAgent(),
+            'module' => $this->faker->randomElement(['products', 'tasks', 'pos', 'sales']),
+            'description' => $this->faker->sentence(),
         ];
     }
 }

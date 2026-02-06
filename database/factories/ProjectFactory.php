@@ -17,19 +17,19 @@ class ProjectFactory extends Factory
 
     public function definition(): array
     {
-        $name = fake()->company();
+        $name = $this->faker->company();
 
         return [
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . fake()->unique()->numberBetween(1, 99999),
+            'slug' => Str::slug($name) . '-' . $this->faker->unique()->numberBetween(1, 99999),
             'logo' => null,
             'primary_color' => '#3B82F6',
             'secondary_color' => '#10B981',
-            'address' => fake()->address(),
-            'phone' => fake()->phoneNumber(),
-            'description' => fake()->sentence(),
-            'city' => fake()->city(),
-            'country' => fake()->country(),
+            'address' => $this->faker->address(),
+            'phone' => $this->faker->phoneNumber(),
+            'description' => $this->faker->sentence(),
+            'city' => $this->faker->city(),
+            'country' => $this->faker->country(),
             'status' => ProjectStatus::Active,
             'owner_id' => User::factory(),
             'config' => null,

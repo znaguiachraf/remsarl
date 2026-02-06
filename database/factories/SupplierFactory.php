@@ -14,12 +14,12 @@ class SupplierFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
-            'name' => fake()->company(),
-            'contact_person' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->phoneNumber(),
-            'address' => fake()->address(),
-            'notes' => fake()->optional()->sentence(),
+            'name' => $this->faker->company(),
+            'contact_person' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->phoneNumber(),
+            'address' => $this->faker->address(),
+            'notes' => $this->faker->optional()->sentence(),
             'is_active' => true,
         ];
     }
