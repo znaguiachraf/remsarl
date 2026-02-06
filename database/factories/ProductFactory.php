@@ -15,11 +15,11 @@ class ProductFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
-            'name' => fake()->words(3, true),
-            'description' => fake()->optional()->sentence(),
-            'price' => fake()->randomFloat(2, 5, 500),
-            'cost_price' => fake()->optional()->randomFloat(2, 2, 200),
-            'unit' => fake()->randomElement(['pcs', 'kg', 'box', 'unit']),
+            'name' => $this->faker->words(3, true),
+            'description' => $this->faker->optional()->sentence(),
+            'price' => $this->faker->randomFloat(2, 5, 500),
+            'cost_price' => $this->faker->optional()->randomFloat(2, 2, 200),
+            'unit' => $this->faker->randomElement(['pcs', 'kg', 'box', 'unit']),
             'supplier_id' => null,
             'image' => null,
             'is_active' => true,
