@@ -56,6 +56,41 @@ class SalaryController extends Controller
         return back()->with('success', 'Payment recorded.');
     }
 
+    public function update(Request $request, Project $project, Salary $salary)
+    {
+        $this->authorize('update', $salary);
+        $this->ensureSalaryBelongsToProject($project, $salary);
+
+        $validated = $request->validate([
+            'gross_amount' => 'required|numeric|min:0',
+            'net_amount' => 'required|numeric|min:0',
+            'absent_days' => 'nullable|numeric|min:0',
+            'attendance_deduction' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            $this->salaryService->update($salary, $validated);
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Salary updated.');
+    }
+
+    public function destroy(Project $project, Salary $salary)
+    {
+        $this->authorize('delete', $salary);
+        $this->ensureSalaryBelongsToProject($project, $salary);
+
+        try {
+            $this->salaryService->delete($salary);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Salary deleted.');
+    }
+
     protected function ensureWorkerBelongsToProject(Project $project, Worker $worker): void
     {
         if ($worker->project_id !== $project->id) {

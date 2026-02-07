@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import {
+    IconCalendar,
     IconDollar,
     IconPencil,
     IconPlus,
@@ -109,12 +110,21 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
                             <p className="mt-0.5 text-sm text-gray-500">Manage workers, contracts, salaries & attendance</p>
                         </div>
                     </div>
-                    {can?.create && (
-                        <PrimaryButton onClick={() => setShowCreateModal(true)}>
-                            <IconPlus className="h-4 w-4" />
-                            Add Worker
-                        </PrimaryButton>
-                    )}
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={route('projects.modules.hr.attendance.index', project.id)}
+                            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                            <IconCalendar className="h-4 w-4" />
+                            Attendance Overview
+                        </Link>
+                        {can?.create && (
+                            <PrimaryButton onClick={() => setShowCreateModal(true)}>
+                                <IconPlus className="h-4 w-4" />
+                                Add Worker
+                            </PrimaryButton>
+                        )}
+                    </div>
                 </div>
             }
         >

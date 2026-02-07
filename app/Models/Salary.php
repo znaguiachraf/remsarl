@@ -21,12 +21,16 @@ class Salary extends Model
         'year',
         'gross_amount',
         'net_amount',
+        'absent_days',
+        'attendance_deduction',
         'status',
     ];
 
     protected $casts = [
         'gross_amount' => 'decimal:2',
         'net_amount' => 'decimal:2',
+        'absent_days' => 'decimal:1',
+        'attendance_deduction' => 'decimal:2',
         'status' => SalaryStatus::class,
     ];
 

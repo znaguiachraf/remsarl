@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hr;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Worker;
+use App\Services\SalaryService;
 use App\Services\WorkerService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,7 +14,8 @@ use Inertia\Response;
 class WorkerController extends Controller
 {
     public function __construct(
-        protected WorkerService $workerService
+        protected WorkerService $workerService,
+        protected SalaryService $salaryService
     ) {}
 
     public function index(Project $project, Request $request): Response
@@ -147,8 +149,13 @@ class WorkerController extends Controller
                     'year' => $s->year,
                     'gross_amount' => (float) $s->gross_amount,
                     'net_amount' => (float) $s->net_amount,
+                    'absent_days' => (float) ($s->absent_days ?? 0),
+                    'attendance_deduction' => (float) ($s->attendance_deduction ?? 0),
+                    'working_days' => $this->salaryService->getWorkingDaysInMonth($s->month, $s->year),
                     'status' => $s->status->value,
                     'status_label' => $s->status->label(),
+                    'can_update' => $user->can('update', $s),
+                    'can_delete' => $user->can('delete', $s),
                 ]),
                 'vacations' => $worker->vacations->map(fn ($v) => [
                     'id' => $v->id,

@@ -17,7 +17,16 @@ import {
     IconUsers,
 } from '@/Components/expense/Icons';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const ATTENDANCE_STATUS_COLORS = {
+    present: 'bg-emerald-100 text-emerald-800',
+    absent: 'bg-red-100 text-red-800',
+    half_day: 'bg-amber-100 text-amber-800',
+    leave: 'bg-blue-100 text-blue-800',
+    late: 'bg-orange-100 text-orange-800',
+    excused: 'bg-gray-100 text-gray-800',
+};
 
 const TABS = [
     { key: 'contract', label: 'Contract', icon: IconTag },
@@ -32,7 +41,19 @@ const MONTHS = [
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 
+const isDateInVacation = (dateStr, vacations) => {
+    if (!vacations?.length) return false;
+    const d = new Date(dateStr);
+    return vacations.some((v) => {
+        if (v.status !== 'approved') return false;
+        const start = new Date(v.start_date);
+        const end = new Date(v.end_date);
+        return d >= start && d <= end;
+    });
+};
+
 export default function HrWorkersShow({ project, worker, can }) {
+    const { flash } = usePage().props;
     const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [activeTab, setActiveTab] = useState('contract');
@@ -41,6 +62,13 @@ export default function HrWorkersShow({ project, worker, can }) {
     const [showVacationModal, setShowVacationModal] = useState(false);
     const [showCnssModal, setShowCnssModal] = useState(false);
     const [showPayModal, setShowPayModal] = useState(null);
+    const [showEditSalaryModal, setShowEditSalaryModal] = useState(null);
+    const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+    const [editingAttendance, setEditingAttendance] = useState(null);
+    const [attendanceMonth, setAttendanceMonth] = useState(new Date().getMonth() + 1);
+    const [attendanceYear, setAttendanceYear] = useState(new Date().getFullYear());
+    const [attendances, setAttendances] = useState([]);
+    const [attendancesLoading, setAttendancesLoading] = useState(false);
 
     const now = new Date();
     const salaryForm = useForm({
@@ -54,6 +82,13 @@ export default function HrWorkersShow({ project, worker, can }) {
         reference: '',
         payment_date: new Date().toISOString().slice(0, 10),
         notes: '',
+    });
+
+    const editSalaryForm = useForm({
+        gross_amount: '',
+        net_amount: '',
+        absent_days: '',
+        attendance_deduction: '',
     });
 
     const contractForm = useForm({
@@ -79,6 +114,97 @@ export default function HrWorkersShow({ project, worker, can }) {
         notes: '',
     });
 
+    const attendanceForm = useForm({
+        date: '',
+        dates: [],
+        status: 'present',
+        notes: '',
+    });
+
+    const fetchAttendances = () => {
+        if (!worker?.id) return;
+        setAttendancesLoading(true);
+        window.axios.get(route('projects.modules.hr.workers.attendances.index', [project.id, worker.id]), {
+            params: { month: attendanceMonth, year: attendanceYear },
+        }).then((res) => {
+            setAttendances(res.data.attendances || []);
+        }).catch(() => setAttendances([])).finally(() => setAttendancesLoading(false));
+    };
+
+    useEffect(() => {
+        if (activeTab === 'attendance' && worker?.id) {
+            fetchAttendances();
+        }
+    }, [activeTab, worker?.id, attendanceMonth, attendanceYear]);
+
+    const openAttendanceModal = (dayOrAttendance) => {
+        if (typeof dayOrAttendance === 'object' && dayOrAttendance?.id) {
+            setEditingAttendance(dayOrAttendance);
+            attendanceForm.setData({
+                date: dayOrAttendance.date,
+                dates: [],
+                status: dayOrAttendance.status,
+                notes: dayOrAttendance.notes || '',
+            });
+        } else {
+            const day = dayOrAttendance || 1;
+            const dateStr = `${attendanceYear}-${String(attendanceMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            setEditingAttendance(null);
+            attendanceForm.setData({
+                date: dateStr,
+                dates: [dateStr],
+                status: 'present',
+                notes: '',
+            });
+        }
+        setShowAttendanceModal(true);
+    };
+
+    const toggleAttendanceDateInModal = (dateStr) => {
+        const current = attendanceForm.data.dates || [];
+        const next = current.includes(dateStr)
+            ? current.filter((d) => d !== dateStr)
+            : [...current, dateStr].sort();
+        attendanceForm.setData('dates', next);
+    };
+
+    const closeAttendanceModal = () => {
+        setShowAttendanceModal(false);
+        setEditingAttendance(null);
+    };
+
+    const handleSaveAttendance = (e) => {
+        e.preventDefault();
+        const dates = attendanceForm.data.dates || [];
+        if (editingAttendance) {
+            attendanceForm.transform((data) => ({ date: data.date, status: data.status, notes: data.notes }));
+            attendanceForm.post(route('projects.modules.hr.workers.attendances.store', [project.id, worker.id]), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    closeAttendanceModal();
+                    fetchAttendances();
+                },
+            });
+        } else if (dates.length > 0) {
+            attendanceForm.transform((data) => ({ dates: data.dates, status: data.status, notes: data.notes }));
+            attendanceForm.post(route('projects.modules.hr.workers.attendances.storeBulk', [project.id, worker.id]), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    closeAttendanceModal();
+                    fetchAttendances();
+                },
+            });
+        }
+    };
+
+    const handleDeleteAttendance = (attendance) => {
+        if (!attendance.can_delete) return;
+        router.delete(route('projects.modules.hr.workers.attendances.destroy', [project.id, attendance.id]), {
+            preserveScroll: true,
+            onSuccess: () => fetchAttendances(),
+        });
+    };
+
     const handleGenerateSalary = (e) => {
         e.preventDefault();
         salaryForm.post(route('projects.modules.hr.workers.salaries.generate', [project.id, worker.id]), {
@@ -98,6 +224,34 @@ export default function HrWorkersShow({ project, worker, can }) {
             reference: '',
             payment_date: new Date().toISOString().slice(0, 10),
             notes: '',
+        });
+    };
+
+    const openEditSalaryModal = (salary) => {
+        setShowEditSalaryModal(salary);
+        editSalaryForm.setData({
+            gross_amount: salary.gross_amount.toString(),
+            net_amount: salary.net_amount.toString(),
+            absent_days: (salary.absent_days ?? 0).toString(),
+            attendance_deduction: (salary.attendance_deduction ?? 0).toString(),
+        });
+    };
+
+    const handleEditSalary = (e) => {
+        e.preventDefault();
+        if (!showEditSalaryModal) return;
+        editSalaryForm.patch(route('projects.modules.hr.workers.salaries.update', [project.id, showEditSalaryModal.id]), {
+            preserveScroll: true,
+            onSuccess: () => setShowEditSalaryModal(null),
+        });
+    };
+
+    const handleDeleteSalary = (salary) => {
+        if (!salary.can_delete) return;
+        if (salary.status === 'paid') return;
+        if (!confirm(`Delete salary for ${MONTHS[salary.month - 1]} ${salary.year}?`)) return;
+        router.delete(route('projects.modules.hr.workers.salaries.destroy', { project: project.id, salary: salary.id }), {
+            preserveScroll: true,
         });
     };
 
@@ -197,6 +351,17 @@ export default function HrWorkersShow({ project, worker, can }) {
         >
             <Head title={`${project?.name} - ${worker.full_name}`} />
 
+            {flash?.error && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {flash.error}
+                </div>
+            )}
+            {flash?.success && (
+                <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {flash.success}
+                </div>
+            )}
+
             {/* Tabs */}
             <div className="mb-6 border-b border-gray-200">
                 <nav className="-mb-px flex gap-6">
@@ -283,6 +448,7 @@ export default function HrWorkersShow({ project, worker, can }) {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Period</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Working days</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Gross</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Net</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
@@ -293,8 +459,16 @@ export default function HrWorkersShow({ project, worker, can }) {
                                 {worker.salaries.map((s) => (
                                     <tr key={s.id}>
                                         <td className="px-6 py-4 text-sm font-medium text-gray-900">{MONTHS[s.month - 1]} {s.year}</td>
+                                        <td className="px-6 py-4 text-sm text-right text-gray-600">{s.working_days ?? '—'}</td>
                                         <td className="px-6 py-4 text-sm text-right">{Number(s.gross_amount).toLocaleString()}</td>
-                                        <td className="px-6 py-4 text-sm text-right font-medium">{Number(s.net_amount).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-sm text-right font-medium">
+                                            {Number(s.net_amount).toLocaleString()}
+                                            {(s.absent_days > 0 || s.attendance_deduction > 0) && (
+                                                <span className="block text-xs font-normal text-amber-600" title="Absent days deduction">
+                                                    −{s.absent_days}d ({Number(s.attendance_deduction).toLocaleString()})
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                                 s.status === 'paid' ? 'bg-emerald-100 text-emerald-800' :
@@ -304,16 +478,37 @@ export default function HrWorkersShow({ project, worker, can }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            {s.status === 'generated' && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openPayModal(s)}
-                                                    className="text-sm font-medium"
-                                                    style={{ color: primaryColor }}
-                                                >
-                                                    Record Payment
-                                                </button>
-                                            )}
+                                            <div className="flex items-center justify-end gap-2">
+                                                {s.status === 'generated' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openPayModal(s)}
+                                                        className="text-sm font-medium"
+                                                        style={{ color: primaryColor }}
+                                                    >
+                                                        Record Payment
+                                                    </button>
+                                                )}
+                                                {s.can_update && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openEditSalaryModal(s)}
+                                                        className="text-sm text-gray-600 hover:text-gray-900"
+                                                    >
+                                                        <IconPencil className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                                {s.can_delete && s.status !== 'paid' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteSalary(s)}
+                                                        className="text-sm text-red-600 hover:text-red-700"
+                                                        title="Delete salary (only unpaid)"
+                                                    >
+                                                        <IconTrash className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -329,12 +524,103 @@ export default function HrWorkersShow({ project, worker, can }) {
 
             {/* Tab: Attendance */}
             {activeTab === 'attendance' && (
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <h3 className="font-medium text-gray-900">Attendance</h3>
-                    <p className="mt-2 text-sm text-gray-500">
-                        Attendance tracking (working days) will be available. Use the calendar view to record daily attendance.
-                    </p>
-                    <p className="mt-4 text-sm text-gray-400 italic">Full calendar view coming soon.</p>
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <h3 className="font-medium text-gray-900">Attendance</h3>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (attendanceMonth === 1) {
+                                            setAttendanceMonth(12);
+                                            setAttendanceYear((y) => y - 1);
+                                        } else {
+                                            setAttendanceMonth((m) => m - 1);
+                                        }
+                                    }}
+                                    className="rounded p-1.5 text-gray-600 hover:bg-gray-200"
+                                >
+                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                </button>
+                                <span className="min-w-[120px] text-center font-medium text-gray-900">{MONTHS[attendanceMonth - 1]} {attendanceYear}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (attendanceMonth === 12) {
+                                            setAttendanceMonth(1);
+                                            setAttendanceYear((y) => y + 1);
+                                        } else {
+                                            setAttendanceMonth((m) => m + 1);
+                                        }
+                                    }}
+                                    className="rounded p-1.5 text-gray-600 hover:bg-gray-200"
+                                >
+                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        {can?.create_attendance && (
+                            <PrimaryButton onClick={() => openAttendanceModal(1)}>
+                                <IconPlus className="h-4 w-4" />
+                                Add Attendance
+                            </PrimaryButton>
+                        )}
+                    </div>
+                    <div className="p-6">
+                        {attendancesLoading ? (
+                            <p className="text-center py-8 text-gray-500">Loading...</p>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-7 gap-2 sm:grid-cols-10 md:grid-cols-15" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(2.5rem, 1fr))' }}>
+                                    {Array.from({ length: new Date(attendanceYear, attendanceMonth, 0).getDate() }, (_, i) => i + 1).map((day) => {
+                                        const dateStr = `${attendanceYear}-${String(attendanceMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                        const record = attendances.find((a) => a.date === dateStr);
+                                        const isVacation = isDateInVacation(dateStr, worker.vacations);
+                                        const displayStatus = record || (isVacation ? { status: 'leave', status_label: 'Vacation' } : null);
+                                        return (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => can?.create_attendance && openAttendanceModal(record || day)}
+                                                className={`min-h-[2.5rem] rounded-lg border p-1.5 text-center text-xs font-medium transition ${
+                                                    displayStatus
+                                                        ? `${ATTENDANCE_STATUS_COLORS[displayStatus.status] || 'bg-gray-100'} cursor-pointer hover:ring-2`
+                                                        : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-gray-100'
+                                                }`}
+                                                title={displayStatus ? `${displayStatus.status_label}${record?.notes ? `: ${record.notes}` : ''}` : 'Add'}
+                                            >
+                                                <span className="block">{day}</span>
+                                                {displayStatus && <span className="block truncate text-[10px]">{displayStatus.status_label}</span>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {(attendances.length > 0 || (worker.vacations?.filter((v) => v.status === 'approved').length || 0) > 0) && (
+                                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+                                        {['present', 'absent', 'half_day', 'leave', 'late', 'excused'].map((status) => {
+                                            const count = attendances.filter((a) => a.status === status).length;
+                                            const vacationCount = status === 'leave' ? Array.from({ length: new Date(attendanceYear, attendanceMonth, 0).getDate() }, (_, i) => i + 1)
+                                                .filter((d) => {
+                                                    const dateStr = `${attendanceYear}-${String(attendanceMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                                    return isDateInVacation(dateStr, worker.vacations) && !attendances.find((a) => a.date === dateStr);
+                                                }).length : 0;
+                                            const total = count + vacationCount;
+                                            if (total === 0) return null;
+                                            const label = attendances.find((x) => x.status === status)?.status_label || (status === 'leave' ? 'Vacation/Leave' : status);
+                                            const dotClass = ATTENDANCE_STATUS_COLORS[status]?.split(' ')[0] || 'bg-gray-300';
+                                            return (
+                                                <span key={status} className="flex items-center gap-1.5">
+                                                    <span className={`inline-block h-2 w-2 rounded-full ${dotClass}`} />
+                                                    {label}: {total}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -478,11 +764,77 @@ export default function HrWorkersShow({ project, worker, can }) {
                                     required
                                 />
                             </div>
-                            <p className="text-sm text-gray-500">Salary will be generated based on the active contract.</p>
+                            <p className="text-sm text-gray-500">
+                                Salary is calculated from working days (Mon–Fri) in the month. Net = Gross − (absent days × daily rate).
+                            </p>
                         </div>
                         <div className="mt-6 flex justify-end gap-2">
                             <SecondaryButton type="button" onClick={() => setShowSalaryModal(false)}>Cancel</SecondaryButton>
                             <PrimaryButton type="submit" disabled={salaryForm.processing}>Generate</PrimaryButton>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Edit Salary Modal */}
+            {showEditSalaryModal && (
+                <Modal show onClose={() => setShowEditSalaryModal(null)} maxWidth="sm">
+                    <form onSubmit={handleEditSalary} className="p-6">
+                        <h3 className="text-lg font-medium text-gray-900">Edit Salary</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                            {MONTHS[showEditSalaryModal.month - 1]} {showEditSalaryModal.year} · {showEditSalaryModal.working_days} working days
+                        </p>
+                        <div className="mt-4 space-y-4">
+                            <div>
+                                <InputLabel value="Gross Amount" />
+                                <TextInput
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={editSalaryForm.data.gross_amount}
+                                    onChange={(e) => editSalaryForm.setData('gross_amount', e.target.value)}
+                                    className="block w-full"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <InputLabel value="Net Amount" />
+                                <TextInput
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={editSalaryForm.data.net_amount}
+                                    onChange={(e) => editSalaryForm.setData('net_amount', e.target.value)}
+                                    className="block w-full"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <InputLabel value="Absent Days" />
+                                <TextInput
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    value={editSalaryForm.data.absent_days}
+                                    onChange={(e) => editSalaryForm.setData('absent_days', e.target.value)}
+                                    className="block w-full"
+                                />
+                            </div>
+                            <div>
+                                <InputLabel value="Attendance Deduction" />
+                                <TextInput
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={editSalaryForm.data.attendance_deduction}
+                                    onChange={(e) => editSalaryForm.setData('attendance_deduction', e.target.value)}
+                                    className="block w-full"
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end gap-2">
+                            <SecondaryButton type="button" onClick={() => setShowEditSalaryModal(null)}>Cancel</SecondaryButton>
+                            <PrimaryButton type="submit" disabled={editSalaryForm.processing}>Save</PrimaryButton>
                         </div>
                     </form>
                 </Modal>
@@ -606,6 +958,114 @@ export default function HrWorkersShow({ project, worker, can }) {
                         <div className="mt-6 flex justify-end gap-2">
                             <SecondaryButton type="button" onClick={() => setShowVacationModal(false)}>Cancel</SecondaryButton>
                             <PrimaryButton type="submit" disabled={vacationForm.processing}>Submit Request</PrimaryButton>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Add/Edit Attendance Modal */}
+            {showAttendanceModal && (
+                <Modal show onClose={closeAttendanceModal} maxWidth={editingAttendance ? 'sm' : 'md'}>
+                    <form onSubmit={handleSaveAttendance} className="p-6">
+                        <h3 className="text-lg font-medium text-gray-900">
+                            {editingAttendance ? 'Edit Attendance' : 'Add Attendance'}
+                        </h3>
+                        <div className="mt-4 space-y-4">
+                            {editingAttendance ? (
+                                <div>
+                                    <InputLabel value="Date" />
+                                    <TextInput
+                                        type="date"
+                                        value={attendanceForm.data.date}
+                                        onChange={(e) => attendanceForm.setData('date', e.target.value)}
+                                        className="block w-full"
+                                        required
+                                    />
+                                </div>
+                            ) : (
+                                <div>
+                                    <InputLabel value="Select days" />
+                                    <div className="mt-2 grid grid-cols-7 gap-1">
+                                        {Array.from({ length: new Date(attendanceYear, attendanceMonth, 0).getDate() }, (_, i) => i + 1).map((day) => {
+                                            const dateStr = `${attendanceYear}-${String(attendanceMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                            const checked = (attendanceForm.data.dates || []).includes(dateStr);
+                                            const record = attendances.find((a) => a.date === dateStr);
+                                            return (
+                                                <label
+                                                    key={day}
+                                                    className={`flex cursor-pointer flex-col items-center rounded border p-2 text-center text-xs transition ${
+                                                        checked ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+                                                    } ${record ? 'opacity-60' : ''}`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={() => toggleAttendanceDateInModal(dateStr)}
+                                                        className="sr-only"
+                                                    />
+                                                    <span className="font-medium">{day}</span>
+                                                    {record && <span className="text-[10px] text-gray-500 truncate">{record.status_label}</span>}
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        {(attendanceForm.data.dates || []).length} day(s) selected.
+                                    </p>
+                                </div>
+                            )}
+                            <div>
+                                <InputLabel value="Status" />
+                                <select
+                                    value={attendanceForm.data.status}
+                                    onChange={(e) => attendanceForm.setData('status', e.target.value)}
+                                    className={selectClass + ' w-full'}
+                                >
+                                    <option value="present">Present</option>
+                                    <option value="absent">Absent</option>
+                                    <option value="half_day">Half day</option>
+                                    <option value="leave">Leave</option>
+                                    <option value="late">Late</option>
+                                    <option value="excused">Excused</option>
+                                </select>
+                            </div>
+                            <div>
+                                <InputLabel value="Notes" />
+                                <textarea
+                                    value={attendanceForm.data.notes}
+                                    onChange={(e) => attendanceForm.setData('notes', e.target.value)}
+                                    rows={2}
+                                    className={inputClass + ' w-full'}
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-between">
+                            <div>
+                                {editingAttendance?.can_delete && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (confirm('Remove this attendance record?')) {
+                                                handleDeleteAttendance(editingAttendance);
+                                                closeAttendanceModal();
+                                            }
+                                        }}
+                                        className="text-sm text-red-600 hover:text-red-500"
+                                    >
+                                        <IconTrash className="inline h-4 w-4 mr-1" />
+                                        Remove
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <SecondaryButton type="button" onClick={closeAttendanceModal}>Cancel</SecondaryButton>
+                                <PrimaryButton
+                                    type="submit"
+                                    disabled={attendanceForm.processing || (!editingAttendance && (attendanceForm.data.dates || []).length === 0)}
+                                >
+                                    Save{!editingAttendance && (attendanceForm.data.dates || []).length > 0 ? ` (${(attendanceForm.data.dates || []).length} days)` : ''}
+                                </PrimaryButton>
+                            </div>
                         </div>
                     </form>
                 </Modal>

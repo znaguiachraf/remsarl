@@ -140,6 +140,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::prefix('modules/hr')->name('modules.hr.')->middleware('project.module:hr')->group(function () {
                 Route::get('/', fn (\Illuminate\Http\Request $r) => redirect()->route('projects.modules.hr.workers.index', ['project' => $r->route('project')]))->name('index');
+                Route::get('/attendance', [HrAttendanceController::class, 'projectIndex'])->name('attendance.index');
                 Route::prefix('workers')->name('workers.')->group(function () {
                     Route::get('/', [HrWorkerController::class, 'index'])->name('index');
                     Route::post('/', [HrWorkerController::class, 'store'])->name('store');
@@ -151,7 +152,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::delete('/contracts/{contract}', [HrContractController::class, 'destroy'])->name('contracts.destroy');
                     Route::post('/{worker}/salaries/generate', [HrSalaryController::class, 'generate'])->name('salaries.generate');
                     Route::post('/salaries/{salary}/pay', [HrSalaryController::class, 'pay'])->name('salaries.pay');
+                    Route::patch('/salaries/{salary}', [HrSalaryController::class, 'update'])->name('salaries.update');
+                    Route::delete('/salaries/{salary}', [HrSalaryController::class, 'destroy'])->name('salaries.destroy');
+                    Route::get('/{worker}/attendances', [HrAttendanceController::class, 'index'])->name('attendances.index');
                     Route::post('/{worker}/attendances', [HrAttendanceController::class, 'store'])->name('attendances.store');
+                    Route::post('/{worker}/attendances/bulk', [HrAttendanceController::class, 'storeBulk'])->name('attendances.storeBulk');
                     Route::delete('/attendances/{attendance}', [HrAttendanceController::class, 'destroy'])->name('attendances.destroy');
                     Route::post('/{worker}/vacations', [HrVacationController::class, 'store'])->name('vacations.store');
                     Route::delete('/vacations/{vacation}', [HrVacationController::class, 'destroy'])->name('vacations.destroy');
