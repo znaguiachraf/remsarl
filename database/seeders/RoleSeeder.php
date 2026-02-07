@@ -38,7 +38,10 @@ class RoleSeeder extends Seeder
             ['name' => 'Create Expenses', 'slug' => 'expense.create', 'module' => 'expenses'],
             ['name' => 'Update Expenses', 'slug' => 'expense.update', 'module' => 'expenses'],
             ['name' => 'Pay Expenses', 'slug' => 'expense.pay', 'module' => 'expenses'],
-            ['name' => 'Access Suppliers', 'slug' => 'suppliers.access', 'module' => 'suppliers'],
+            ['name' => 'View Suppliers', 'slug' => 'supplier.view', 'module' => 'suppliers'],
+            ['name' => 'Create Suppliers', 'slug' => 'supplier.create', 'module' => 'suppliers'],
+            ['name' => 'Update Suppliers', 'slug' => 'supplier.update', 'module' => 'suppliers'],
+            ['name' => 'Delete Suppliers', 'slug' => 'supplier.delete', 'module' => 'suppliers'],
             ['name' => 'View Activity Logs', 'slug' => 'log.view', 'module' => 'logs'],
         ];
 

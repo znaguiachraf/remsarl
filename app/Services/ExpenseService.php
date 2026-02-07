@@ -18,7 +18,7 @@ class ExpenseService
     public function list(Project $project, array $filters = []): LengthAwarePaginator
     {
         $query = Expense::forProject($project)
-            ->with(['expenseCategory', 'user'])
+            ->with(['expenseCategory', 'supplier', 'user'])
             ->orderByDesc('expense_date');
 
         if (!empty($filters['status'])) {
@@ -49,6 +49,7 @@ class ExpenseService
             $expense = Expense::create([
                 'project_id' => $project->id,
                 'expense_category_id' => $data['expense_category_id'] ?? null,
+                'supplier_id' => $data['supplier_id'] ?? null,
                 'reference' => $data['reference'] ?? null,
                 'description' => $data['description'],
                 'amount' => $data['amount'],
@@ -80,6 +81,7 @@ class ExpenseService
         $expense = DB::transaction(function () use ($expense, $data, $oldValues) {
             $expense->update([
                 'expense_category_id' => $data['expense_category_id'] ?? $expense->expense_category_id,
+                'supplier_id' => $data['supplier_id'] ?? $expense->supplier_id,
                 'reference' => $data['reference'] ?? $expense->reference,
                 'description' => $data['description'] ?? $expense->description,
                 'amount' => $data['amount'] ?? $expense->amount,

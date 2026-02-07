@@ -31,6 +31,7 @@ class ExpenseController extends Controller
         ]);
 
         $categories = ExpenseCategory::forProject($project)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'color']);
+        $suppliers = \App\Models\Supplier::forProject($project)->where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
         $user = $request->user();
 
@@ -53,6 +54,10 @@ class ExpenseController extends Controller
                         'name' => $e->expenseCategory->name,
                         'color' => $e->expenseCategory->color,
                     ] : null,
+                    'supplier' => $e->supplier ? [
+                        'id' => $e->supplier->id,
+                        'name' => $e->supplier->name,
+                    ] : null,
                     'user' => $e->user ? ['name' => $e->user->name] : null,
                     'can_update' => $user->can('update', $e),
                     'can_pay' => $user->can('pay', $e),
@@ -69,6 +74,10 @@ class ExpenseController extends Controller
                 'id' => $c->id,
                 'name' => $c->name,
                 'color' => $c->color,
+            ])->values()->toArray(),
+            'suppliers' => $suppliers->map(fn ($s) => [
+                'id' => $s->id,
+                'name' => $s->name,
             ])->values()->toArray(),
             'filters' => [
                 'status' => $request->get('status'),
@@ -89,10 +98,12 @@ class ExpenseController extends Controller
 
         $request->merge([
             'expense_category_id' => $request->input('expense_category_id') ?: null,
+            'supplier_id' => $request->input('supplier_id') ?: null,
         ]);
 
         $validated = $request->validate([
             'expense_category_id' => 'nullable|exists:expense_categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'reference' => 'nullable|string|max:100',
             'description' => 'required|string|max:500',
             'amount' => 'required|numeric|min:0',
@@ -100,6 +111,7 @@ class ExpenseController extends Controller
         ]);
 
         $this->ensureResourceBelongsToProject($project, $validated['expense_category_id'] ?? null, 'expense_categories');
+        $this->ensureResourceBelongsToProject($project, $validated['supplier_id'] ?? null, 'suppliers');
 
         $this->expenseService->create($project, $validated);
 
@@ -113,10 +125,12 @@ class ExpenseController extends Controller
 
         $request->merge([
             'expense_category_id' => $request->input('expense_category_id') ?: null,
+            'supplier_id' => $request->input('supplier_id') ?: null,
         ]);
 
         $validated = $request->validate([
             'expense_category_id' => 'nullable|exists:expense_categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'reference' => 'nullable|string|max:100',
             'description' => 'required|string|max:500',
             'amount' => 'required|numeric|min:0',
@@ -125,6 +139,7 @@ class ExpenseController extends Controller
         ]);
 
         $this->ensureResourceBelongsToProject($project, $validated['expense_category_id'] ?? null, 'expense_categories');
+        $this->ensureResourceBelongsToProject($project, $validated['supplier_id'] ?? null, 'suppliers');
 
         $this->expenseService->update($expense, $validated);
 

@@ -19,6 +19,7 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectWorkerController;
 use Illuminate\Foundation\Application;
@@ -121,6 +122,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::post('/', [SaleController::class, 'store'])->name('store');
                 Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
                 Route::post('/{sale}/pay', [SaleController::class, 'pay'])->name('pay');
+            });
+
+            Route::prefix('modules/suppliers')->name('modules.suppliers.')->middleware('project.module:suppliers')->group(function () {
+                Route::get('/', [SupplierController::class, 'index'])->name('index');
+                Route::post('/', [SupplierController::class, 'store'])->name('store');
+                Route::get('/{supplier}', [SupplierController::class, 'show'])->name('show');
+                Route::patch('/{supplier}', [SupplierController::class, 'update'])->name('update');
+                Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
             });
 
             Route::prefix('modules/expenses')->name('modules.expenses.')->middleware('project.module:expenses')->group(function () {
