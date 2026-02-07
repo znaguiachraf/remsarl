@@ -36,7 +36,7 @@ export default function ProjectLayout({ header, children }) {
 
                 {/* Mobile sidebar - full-width drawer with safe areas */}
                 <div
-                    className={`fixed inset-y-0 left-0 z-40 w-[min(20rem,85vw)] max-w-full transform bg-gray-800 shadow-xl transition-transform duration-300 ease-out md:hidden ${
+                    className={`fixed inset-y-0 left-0 z-40 w-[min(20rem,85vw)] max-w-full transform shadow-xl transition-transform duration-300 ease-out md:hidden ${
                         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
                     style={{

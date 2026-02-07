@@ -81,6 +81,12 @@ export default function Sidebar({
     const isMobile = variant === 'mobile';
     const isCollapsed = !isMobile && collapsed;
 
+    const primary = currentProject?.primary_color || '#3B82F6';
+    const secondary = currentProject?.secondary_color || '#10B981';
+    const gradientStyle = {
+        background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
+    };
+
     const handleToggle = () => {
         if (isMobile) {
             onClose?.();
@@ -91,8 +97,8 @@ export default function Sidebar({
 
     return (
         <aside
-            className={`flex h-full shrink-0 flex-col bg-gray-800 transition-[width] duration-200 ${isMobile ? 'w-full' : isCollapsed ? 'w-20' : 'w-64'} ${className}`}
-            style={isMobile ? { overscrollBehavior: 'contain' } : undefined}
+            className={`flex h-full shrink-0 flex-col transition-[width] duration-200 ${isMobile ? 'w-full' : isCollapsed ? 'w-20' : 'w-64'} ${className}`}
+            style={isMobile ? { ...gradientStyle, overscrollBehavior: 'contain' } : gradientStyle}
         >
             <div className={`flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 ${isMobile ? 'h-14 min-h-[3.5rem]' : 'h-16'} ${isCollapsed ? 'px-2' : 'px-4'}`}>
                 <div className={`flex min-w-0 flex-1 items-center gap-2 ${isCollapsed ? 'justify-center' : ''}`}>
@@ -104,8 +110,7 @@ export default function Sidebar({
                         />
                     ) : (
                         <div
-                            className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                            style={{ backgroundColor: currentProject?.primary_color || '#3B82F6' }}
+                            className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-white font-bold text-sm bg-white/25 backdrop-blur-sm"
                         >
                             {currentProject?.name?.charAt(0)}
                         </div>

@@ -24,33 +24,21 @@ export default function ProjectDashboard({ project, can }) {
 
     return (
         <ProjectLayout
-            header={
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                        <h2 className="text-lg font-semibold leading-tight text-gray-800 sm:text-xl truncate">
-                            Dashboard
-                        </h2>
-                        <p className="mt-0.5 text-sm text-gray-500 line-clamp-2 sm:line-clamp-none">
-                            {project?.description || 'Project overview'}
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        {auth?.user?.is_admin && (
-                            <Link
-                                href={route('admin.projects.edit', project?.id)}
-                                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-95 touch-manipulation"
-                                style={{
-                                    color: primaryColor,
-                                    backgroundColor: `${primaryColor}15`,
-                                }}
-                            >
-                                Edit colors
-                            </Link>
-                        )}
-                        <StatusBadge status={project?.status} />
-                    </div>
-                </div>
-            }
+            // header={
+            //     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            //         <div className="min-w-0 flex-1 text-left">
+            //             <h2 className="text-lg font-semibold leading-tight text-gray-800 sm:text-xl">
+            //                 Dashboard
+            //             </h2>
+            //             <p className="mt-0.5 text-sm text-gray-500 line-clamp-2 sm:line-clamp-none">
+            //                 {project?.description || 'Project overview'}
+            //             </p>
+            //         </div>
+            //         <div className="flex min-h-[44px] shrink-0 items-center justify-end gap-2">
+            //             <StatusBadge status={project?.status} />
+            //         </div>
+            //     </div>
+            // }
         >
             <Head title={`${project?.name} - Dashboard`} />
 
