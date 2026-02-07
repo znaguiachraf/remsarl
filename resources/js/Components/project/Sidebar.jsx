@@ -1,5 +1,21 @@
 import { Link, usePage } from '@inertiajs/react';
 
+/** Modules with dedicated routes - use direct link instead of generic modules.show */
+const moduleRouteMap = {
+    hr: (projectId) => route('projects.modules.hr.workers.index', projectId),
+    suppliers: (projectId) => route('projects.modules.suppliers.index', projectId),
+    products: (projectId) => route('projects.modules.products.index', projectId),
+    sales: (projectId) => route('projects.modules.sales.index', projectId),
+    stock: (projectId) => route('projects.modules.stock.index', projectId),
+    pos: (projectId) => route('projects.modules.pos.index', projectId),
+    payments: (projectId) => route('projects.modules.payments.index', projectId),
+    expenses: (projectId) => route('projects.modules.expenses.index', projectId),
+    logs: (projectId) => route('projects.modules.logs.index', projectId),
+};
+
+const getModuleHref = (projectId, moduleKey) =>
+    moduleRouteMap[moduleKey]?.(projectId) ?? route('projects.modules.show', [projectId, moduleKey]);
+
 const iconPaths = {
     'shopping-cart': 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
     'check-square': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
@@ -136,8 +152,8 @@ export default function Sidebar({
                 {enabledModules?.map((module) => (
                     <NavItem
                         key={module.key}
-                        href={route('projects.modules.show', [projectId, module.key])}
-                        active={isActive(`/projects/${projectId}/modules/${module.key}`)}
+                        href={getModuleHref(projectId, module.key)}
+                        active={isActive(getModuleHref(projectId, module.key))}
                         icon={module.icon}
                         onNavigate={onNavigate}
                         isMobile={isMobile}

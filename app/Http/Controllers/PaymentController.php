@@ -123,15 +123,15 @@ class PaymentController extends Controller
 
     protected function formatPayment(Payment $p, $user): array
     {
-        $sale = $p->sale;
-        $saleLabel = $sale
-            ? ('Sale #' . $sale->sale_number)
-            : ('Sale #' . $p->sale_id);
+        $payable = $p->payable;
+        $payableLabel = $payable instanceof \App\Models\Sale
+            ? ('Sale #' . $payable->sale_number)
+            : ($payable ? 'Salary #' . $p->payable_id : ('Sale #' . $p->sale_id));
 
         return [
             'id' => $p->id,
             'sale_id' => $p->sale_id,
-            'sale_label' => $saleLabel,
+            'sale_label' => $payableLabel,
             'payment_method' => $p->payment_method,
             'amount' => (float) $p->amount,
             'reference' => $p->reference,

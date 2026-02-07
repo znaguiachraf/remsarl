@@ -62,7 +62,7 @@ class ProjectController extends Controller
             'logo' => 'nullable|image|max:2048',
             'status' => 'nullable|in:active,suspended,archived',
             'enabled_modules' => 'nullable|array',
-            'enabled_modules.*' => 'string|in:pos,tasks,payments,orders,products,stock,sales,expenses,suppliers,logs',
+            'enabled_modules.*' => 'string|in:pos,tasks,payments,orders,products,stock,sales,expenses,suppliers,hr,logs',
         ]);
 
         $logoPath = null;
