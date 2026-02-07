@@ -89,7 +89,7 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
     };
 
     const handleDelete = (worker) => {
-        router.delete(route('projects.modules.hr.workers.destroy', [project.id, worker.id]), {
+        router.delete(route('projects.modules.hr.workers.destroy', { project: project.id, worker: worker.id }), {
             preserveScroll: true,
             onSuccess: () => setDeletingWorker(null),
         });
