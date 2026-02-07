@@ -88,15 +88,17 @@ class WorkerController extends Controller
             'cnss_number' => 'nullable|string|max:100',
         ]);
 
-        $this->workerService->create($project, $validated);
+        $worker = $this->workerService->create($project, $validated);
 
-        return back()->with('success', 'Worker created.');
+        return redirect()
+            ->route('projects.modules.hr.workers.show', ['project' => $project->id, 'worker' => $worker->id])
+            ->with('success', 'Worker created.');
     }
 
     public function show(Project $project, Worker $worker, Request $request): Response
     {
+        $worker = Worker::forProject($project)->findOrFail($worker->id);
         $this->authorize('view', $worker);
-        $this->ensureWorkerBelongsToProject($project, $worker);
 
         $worker->load([
             'user',
@@ -182,8 +184,8 @@ class WorkerController extends Controller
 
     public function update(Request $request, Project $project, Worker $worker)
     {
+        $worker = Worker::forProject($project)->findOrFail($worker->id);
         $this->authorize('update', $worker);
-        $this->ensureWorkerBelongsToProject($project, $worker);
 
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
@@ -205,18 +207,12 @@ class WorkerController extends Controller
 
     public function destroy(Project $project, Worker $worker)
     {
+        $worker = Worker::forProject($project)->findOrFail($worker->id);
         $this->authorize('delete', $worker);
-        $this->ensureWorkerBelongsToProject($project, $worker);
 
         $this->workerService->delete($worker);
 
         return back()->with('success', 'Worker deleted.');
     }
 
-    protected function ensureWorkerBelongsToProject(Project $project, Worker $worker): void
-    {
-        if ($worker->project_id !== $project->id) {
-            abort(403, 'Worker does not belong to this project.');
-        }
-    }
 }
