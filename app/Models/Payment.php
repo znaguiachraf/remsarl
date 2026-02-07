@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use App\Models\Concerns\BelongsToProject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Payment extends Model
 {
@@ -14,6 +15,8 @@ class Payment extends Model
     protected $fillable = [
         'project_id',
         'sale_id',
+        'payable_type',
+        'payable_id',
         'payment_method',
         'amount',
         'reference',
@@ -32,6 +35,11 @@ class Payment extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function payable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     public function user(): BelongsTo

@@ -19,6 +19,13 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\Hr\WorkerController as HrWorkerController;
+use App\Http\Controllers\Hr\ContractController as HrContractController;
+use App\Http\Controllers\Hr\SalaryController as HrSalaryController;
+use App\Http\Controllers\Hr\AttendanceController as HrAttendanceController;
+use App\Http\Controllers\Hr\VacationController as HrVacationController;
+use App\Http\Controllers\Hr\CnssRecordController as HrCnssRecordController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectWorkerController;
 use Illuminate\Foundation\Application;
@@ -121,6 +128,44 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::post('/', [SaleController::class, 'store'])->name('store');
                 Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
                 Route::post('/{sale}/pay', [SaleController::class, 'pay'])->name('pay');
+            });
+
+            Route::prefix('modules/suppliers')->name('modules.suppliers.')->middleware('project.module:suppliers')->group(function () {
+                Route::get('/', [SupplierController::class, 'index'])->name('index');
+                Route::post('/', [SupplierController::class, 'store'])->name('store');
+                Route::get('/{supplier}', [SupplierController::class, 'show'])->name('show');
+                Route::patch('/{supplier}', [SupplierController::class, 'update'])->name('update');
+                Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('modules/hr')->name('modules.hr.')->middleware('project.module:hr')->group(function () {
+                Route::get('/', fn (\Illuminate\Http\Request $r) => redirect()->route('projects.modules.hr.workers.index', ['project' => $r->route('project')]))->name('index');
+                Route::get('/attendance', [HrAttendanceController::class, 'projectIndex'])->name('attendance.index');
+                Route::prefix('workers')->name('workers.')->group(function () {
+                    Route::get('/', [HrWorkerController::class, 'index'])->name('index');
+                    Route::post('/', [HrWorkerController::class, 'store'])->name('store');
+                    Route::get('/{worker}', [HrWorkerController::class, 'show'])->name('show');
+                    Route::patch('/{worker}', [HrWorkerController::class, 'update'])->name('update');
+                    Route::delete('/{worker}', [HrWorkerController::class, 'destroy'])->name('destroy');
+                    Route::post('/{worker}/contracts', [HrContractController::class, 'store'])->name('contracts.store');
+                    Route::patch('/contracts/{contract}', [HrContractController::class, 'update'])->name('contracts.update');
+                    Route::delete('/contracts/{contract}', [HrContractController::class, 'destroy'])->name('contracts.destroy');
+                    Route::post('/{worker}/salaries/generate', [HrSalaryController::class, 'generate'])->name('salaries.generate');
+                    Route::post('/salaries/{salary}/pay', [HrSalaryController::class, 'pay'])->name('salaries.pay');
+                    Route::patch('/salaries/{salary}', [HrSalaryController::class, 'update'])->name('salaries.update');
+                    Route::delete('/salaries/{salary}', [HrSalaryController::class, 'destroy'])->name('salaries.destroy');
+                    Route::get('/{worker}/attendances', [HrAttendanceController::class, 'index'])->name('attendances.index');
+                    Route::post('/{worker}/attendances', [HrAttendanceController::class, 'store'])->name('attendances.store');
+                    Route::post('/{worker}/attendances/bulk', [HrAttendanceController::class, 'storeBulk'])->name('attendances.storeBulk');
+                    Route::delete('/attendances/{attendance}', [HrAttendanceController::class, 'destroy'])->name('attendances.destroy');
+                    Route::post('/{worker}/vacations', [HrVacationController::class, 'store'])->name('vacations.store');
+                    Route::delete('/vacations/{vacation}', [HrVacationController::class, 'destroy'])->name('vacations.destroy');
+                    Route::post('/{worker}/cnss-records', [HrCnssRecordController::class, 'store'])->name('cnss.store');
+                });
+                Route::post('/vacations/{vacation}/approve', [HrVacationController::class, 'approve'])->name('vacations.approve');
+                Route::post('/vacations/{vacation}/reject', [HrVacationController::class, 'reject'])->name('vacations.reject');
+                Route::patch('/cnss-records/{cnssRecord}', [HrCnssRecordController::class, 'update'])->name('cnss.update');
+                Route::delete('/cnss-records/{cnssRecord}', [HrCnssRecordController::class, 'destroy'])->name('cnss.destroy');
             });
 
             Route::prefix('modules/expenses')->name('modules.expenses.')->middleware('project.module:expenses')->group(function () {

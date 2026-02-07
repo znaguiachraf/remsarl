@@ -73,6 +73,7 @@ class Module extends Model
             'sales',
             'expenses',
             'suppliers',
+            'hr',
             'logs',
         ];
     }

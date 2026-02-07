@@ -19,7 +19,7 @@ class PaymentService
     public function list(Project $project, array $filters = []): LengthAwarePaginator
     {
         $query = Payment::forProject($project)
-            ->with(['user', 'sale'])
+            ->with(['user', 'payable', 'sale'])
             ->orderByDesc('payment_date')
             ->orderByDesc('created_at');
 
@@ -55,9 +55,9 @@ class PaymentService
         }
 
         return DB::transaction(function () use ($sale, $paymentData, $amount) {
-            $payment = Payment::create([
+            $payment = $sale->payments()->create([
                 'project_id' => $sale->project_id,
-                'sale_id' => $sale->id,
+                'sale_id' => $sale->id, // Keep for backward compatibility
                 'payment_method' => $paymentData['payment_method'] ?? 'cash',
                 'amount' => $amount,
                 'reference' => $paymentData['reference'] ?? null,

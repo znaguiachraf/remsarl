@@ -31,4 +31,9 @@ class Supplier extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
 }

@@ -3,6 +3,21 @@ import ModuleCard from '@/Components/project/ModuleCard';
 import StatusBadge from '@/Components/project/StatusBadge';
 import { Head, Link, usePage } from '@inertiajs/react';
 
+/** Modules with dedicated routes - use direct link instead of generic modules.show */
+const moduleRouteMap = {
+    hr: (projectId) => route('projects.modules.hr.workers.index', projectId),
+    suppliers: (projectId) => route('projects.modules.suppliers.index', projectId),
+    products: (projectId) => route('projects.modules.products.index', projectId),
+    sales: (projectId) => route('projects.modules.sales.index', projectId),
+    stock: (projectId) => route('projects.modules.stock.index', projectId),
+    pos: (projectId) => route('projects.modules.pos.index', projectId),
+    payments: (projectId) => route('projects.modules.payments.index', projectId),
+    expenses: (projectId) => route('projects.modules.expenses.index', projectId),
+    logs: (projectId) => route('projects.modules.logs.index', projectId),
+};
+const getModuleHref = (projectId, moduleKey) =>
+    moduleRouteMap[moduleKey]?.(projectId) ?? route('projects.modules.show', [projectId, moduleKey]);
+
 export default function ProjectDashboard({ project, can }) {
     const { enabledModules, auth } = usePage().props;
     const primaryColor = project?.primary_color || '#3B82F6';
@@ -108,7 +123,7 @@ export default function ProjectDashboard({ project, can }) {
                                 <ModuleCard
                                     key={module.key}
                                     module={module}
-                                    href={route('projects.modules.show', [project.id, module.key])}
+                                    href={getModuleHref(project.id, module.key)}
                                     primaryColor={primaryColor}
                                 />
                             ))}
