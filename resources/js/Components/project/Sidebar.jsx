@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 /** Modules with dedicated routes - use direct link instead of generic modules.show */
 const moduleRouteMap = {
     hr: (projectId) => route('projects.modules.hr.workers.index', projectId),
+    tasks: (projectId) => route('projects.modules.tasks.index', projectId),
     suppliers: (projectId) => route('projects.modules.suppliers.index', projectId),
     products: (projectId) => route('projects.modules.products.index', projectId),
     sales: (projectId) => route('projects.modules.sales.index', projectId),

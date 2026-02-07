@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToProject;
+use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,24 +15,24 @@ class Task extends Model
 
     protected $fillable = [
         'project_id',
+        'worker_id',
         'title',
         'description',
         'status',
-        'priority',
-        'assignee_id',
         'created_by',
         'due_date',
         'completed_at',
     ];
 
     protected $casts = [
+        'status' => TaskStatus::class,
         'due_date' => 'datetime',
         'completed_at' => 'datetime',
     ];
 
-    public function assignee(): BelongsTo
+    public function worker(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assignee_id');
+        return $this->belongsTo(Worker::class);
     }
 
     public function creator(): BelongsTo

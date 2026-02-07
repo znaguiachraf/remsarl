@@ -20,6 +20,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\Hr\WorkerController as HrWorkerController;
 use App\Http\Controllers\Hr\ContractController as HrContractController;
 use App\Http\Controllers\Hr\SalaryController as HrSalaryController;
@@ -83,6 +84,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::prefix('modules/logs')->name('modules.logs.')->middleware('project.module:logs')->group(function () {
                 Route::get('/', [ActivityLogController::class, 'index'])->name('index');
+            });
+
+            Route::prefix('modules/tasks')->name('modules.tasks.')->middleware('project.module:tasks')->group(function () {
+                Route::get('/', [TaskController::class, 'index'])->name('index');
+                Route::get('/my-tasks', [TaskController::class, 'myTasks'])->name('my-tasks');
+                Route::post('/', [TaskController::class, 'store'])->name('store');
+                Route::post('/{task}/complete', [TaskController::class, 'complete'])->name('complete');
+                Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
             });
 
             Route::prefix('modules/payments')->name('modules.payments.')->middleware('project.module:payments')->group(function () {
