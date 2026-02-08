@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\PaymentMethod;
+use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\ProjectModule;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,6 +46,22 @@ class HandleInertiaRequests extends Middleware
             'enabledModules' => $project ? $this->getEnabledModules($project) : [],
             'userRole' => $project && $request->user() ? $this->getUserRole($project, $request->user()) : null,
             'userProjects' => $request->user() ? $this->getUserProjects($request->user()) : [],
+            'notificationCounts' => $project ? $this->getNotificationCounts($project) : [],
+            'payment_methods' => array_map(fn ($v) => ['value' => $v, 'label' => PaymentMethod::from($v)->label()], PaymentMethod::values()),
+        ];
+    }
+
+    protected function getNotificationCounts(Project $project): array
+    {
+        $tasksCount = 0;
+        if ($project->hasModule('tasks')) {
+            $tasksCount = Task::forProject($project)
+                ->where('status', TaskStatus::Pending)
+                ->count();
+        }
+
+        return [
+            'tasks' => $tasksCount,
         ];
     }
 

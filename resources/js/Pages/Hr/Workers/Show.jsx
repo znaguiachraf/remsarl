@@ -9,6 +9,7 @@ import {
     IconArrowLeft,
     IconCalendar,
     IconCreditCard,
+    IconDocument,
     IconDollar,
     IconPencil,
     IconPlus,
@@ -34,6 +35,7 @@ const TABS = [
     { key: 'attendance', label: 'Attendance', icon: IconCalendar },
     { key: 'vacations', label: 'Vacations', icon: IconCalendar },
     { key: 'cnss', label: 'CNSS', icon: IconCreditCard },
+    { key: 'notes', label: 'Notes', icon: IconDocument },
 ];
 
 const MONTHS = [
@@ -53,7 +55,7 @@ const isDateInVacation = (dateStr, vacations) => {
 };
 
 export default function HrWorkersShow({ project, worker, can }) {
-    const { flash } = usePage().props;
+    const { flash, payment_methods = [] } = usePage().props;
     const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [activeTab, setActiveTab] = useState('contract');
@@ -734,6 +736,38 @@ export default function HrWorkersShow({ project, worker, can }) {
                 </div>
             )}
 
+            {/* Tab: Notes */}
+            {activeTab === 'notes' && (
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                        <h3 className="font-medium text-gray-900">Employee Notes</h3>
+                        <Link
+                            href={route('projects.notes.index', project.id) + '?worker_id=' + worker.id}
+                            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            style={{ borderColor: primaryColor + '60', color: primaryColor }}
+                        >
+                            View all notes
+                        </Link>
+                    </div>
+                    {worker.employee_notes?.length > 0 ? (
+                        <div className="divide-y divide-gray-200">
+                            {worker.employee_notes.map((note) => (
+                                <div key={note.id} className="px-6 py-4">
+                                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{note.content}</p>
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        {note.direction === 'to_employee' ? 'To employee' : 'From employee'} · {note.author_name} · {new Date(note.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="px-6 py-12 text-center text-sm text-gray-500">
+                            No notes yet. Notes to and from this employee will appear here.
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Salary Generation Modal */}
             {showSalaryModal && (
                 <Modal show onClose={() => setShowSalaryModal(false)} maxWidth="sm">
@@ -862,11 +896,9 @@ export default function HrWorkersShow({ project, worker, can }) {
                             <div>
                                 <InputLabel value="Payment Method" />
                                 <select value={payForm.data.payment_method} onChange={(e) => payForm.setData('payment_method', e.target.value)} className={selectClass + ' w-full'}>
-                                    <option value="cash">Cash</option>
-                                    <option value="card">Card</option>
-                                    <option value="transfer">Transfer</option>
-                                    <option value="check">Check</option>
-                                    <option value="other">Other</option>
+                                    {payment_methods.map((m) => (
+                                        <option key={m.value} value={m.value}>{m.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

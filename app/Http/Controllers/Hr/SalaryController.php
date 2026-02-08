@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Hr;
 
+use App\Enums\PaymentMethod;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Salary;
@@ -40,7 +41,7 @@ class SalaryController extends Controller
         $this->ensureSalaryBelongsToProject($project, $salary);
 
         $validated = $request->validate([
-            'payment_method' => 'required|in:cash,card,transfer,check,other',
+            'payment_method' => 'required|' . PaymentMethod::validationRule(),
             'amount' => 'required|numeric|min:0.01',
             'reference' => 'nullable|string|max:100',
             'payment_date' => 'required|date',

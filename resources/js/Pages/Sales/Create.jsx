@@ -14,7 +14,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function SalesCreate({ project, products }) {
-    const { currentProject } = usePage().props;
+    const { currentProject, payment_methods = [] } = usePage().props;
     const primaryColor = currentProject?.primary_color || '#3B82F6';
 
     const [lineItems, setLineItems] = useState([{ product_id: '', quantity: 1, unit_price: '' }]);
@@ -68,7 +68,7 @@ export default function SalesCreate({ project, products }) {
     };
 
     const addPayment = () => {
-        setPayments([...payments, { payment_method: 'cash', amount: '', reference: '', payment_date: new Date().toISOString().slice(0, 10) }]);
+        setPayments([...payments, { payment_method: payment_methods[0]?.value || 'cash', amount: '', reference: '', payment_date: new Date().toISOString().slice(0, 10) }]);
     };
 
     const removePayment = (idx) => {
@@ -297,11 +297,9 @@ export default function SalesCreate({ project, products }) {
                                         onChange={(e) => updatePayment(idx, 'payment_method', e.target.value)}
                                         className={selectClass}
                                     >
-                                        <option value="cash">Cash</option>
-                                        <option value="card">Card</option>
-                                        <option value="transfer">Transfer</option>
-                                        <option value="check">Check</option>
-                                        <option value="other">Other</option>
+                                        {payment_methods.map((m) => (
+                                            <option key={m.value} value={m.value}>{m.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="w-32">

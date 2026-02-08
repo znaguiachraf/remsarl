@@ -7,6 +7,7 @@ use App\Models\PosOrder;
 use App\Models\PosSession;
 use App\Models\Project;
 use App\Models\Sale;
+use App\Observers\SaleObserver;
 use App\Models\StockMovement;
 use App\Observers\ExpenseCategoryObserver;
 use App\Policies\PosOrderPolicy;
@@ -42,5 +43,6 @@ class AppServiceProvider extends ServiceProvider
 
         Vite::prefetch(concurrency: 3);
         ExpenseCategory::observe(ExpenseCategoryObserver::class);
+        Sale::observe(SaleObserver::class);
     }
 }

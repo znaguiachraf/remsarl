@@ -25,6 +25,7 @@ const statusColors = {
 };
 
 export default function PaymentsIndex({ project, payments, filters, filterOptions, can }) {
+    const paymentMethods = usePage().props.payment_methods || [];
     const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [viewingPayment, setViewingPayment] = useState(null);
@@ -135,8 +136,8 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                         className={selectClass + ' max-w-[120px]'}
                     >
                         <option value="">All methods</option>
-                        {filterOptions?.payment_methods?.map((m) => (
-                            <option key={m} value={m}>{m}</option>
+                        {paymentMethods.map((m) => (
+                            <option key={m.value} value={m.value}>{m.label}</option>
                         ))}
                     </select>
                 </div>
@@ -385,8 +386,8 @@ export default function PaymentsIndex({ project, payments, filters, filterOption
                                     onChange={(e) => editForm.setData('payment_method', e.target.value)}
                                     className={selectClass + ' w-full'}
                                 >
-                                    {filterOptions?.payment_methods?.map((m) => (
-                                        <option key={m} value={m}>{m}</option>
+                                    {paymentMethods.map((m) => (
+                                        <option key={m.value} value={m.value}>{m.label}</option>
                                     ))}
                                 </select>
                             </div>

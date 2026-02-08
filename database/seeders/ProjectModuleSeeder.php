@@ -19,8 +19,8 @@ class ProjectModuleSeeder extends Seeder
         }
 
         $enabledModuleSets = [
-            ['pos', 'products', 'stock', 'sales', 'payments', 'expenses', 'suppliers', 'logs'],
-            ['tasks', 'products', 'orders', 'payments', 'suppliers', 'logs'],
+            ['pos', 'products', 'stock', 'sales', 'payments', 'expenses', 'suppliers', 'purchase', 'logs'],
+            ['tasks', 'products', 'orders', 'payments', 'suppliers', 'purchase', 'logs'],
             ['products', 'stock', 'sales', 'logs'],
         ];
 

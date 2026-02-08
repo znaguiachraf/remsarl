@@ -15,6 +15,8 @@ class StockMovement extends Model
         'product_id',
         'sale_id',
         'pos_order_id',
+        'purchase_order_id',
+        'location_id',
         'type',
         'quantity',
         'unit_cost',
@@ -36,6 +38,16 @@ class StockMovement extends Model
     public function posOrder(): BelongsTo
     {
         return $this->belongsTo(PosOrder::class);
+    }
+
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
     }
 
     public function product(): BelongsTo

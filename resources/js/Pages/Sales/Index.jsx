@@ -4,6 +4,7 @@ import {
     IconDollar,
     IconDocument,
     IconPlus,
+    IconPrinter,
     IconTag,
 } from '@/Components/expense/Icons';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -140,16 +141,28 @@ export default function SalesIndex({ project, sales, filters, can }) {
                                         {s.payment_status}
                                     </span>
                                 </td>
-                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-right bg-white sticky right-0 shrink-0 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.05)] min-w-[80px]">
-                                    <Link
-                                        href={route('projects.modules.sales.show', [project.id, s.id])}
-                                        className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-sm font-medium transition hover:opacity-80 shrink-0"
-                                        style={{ color: primaryColor }}
-                                        title="View"
-                                    >
-                                        <IconDocument className="h-4 w-4" />
-                                        <span className="hidden sm:inline sm:ml-0.5">View</span>
-                                    </Link>
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-right bg-white sticky right-0 shrink-0 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.05)] min-w-[100px]">
+                                    <div className="flex items-center justify-end gap-1">
+                                        <Link
+                                            href={route('projects.modules.sales.invoice.pdf', [project.id, s.id])}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-sm font-medium text-gray-600 transition hover:text-gray-900 shrink-0"
+                                            title="Print invoice"
+                                        >
+                                            <IconPrinter className="h-4 w-4" />
+                                            <span className="hidden sm:inline sm:ml-0.5">Print</span>
+                                        </Link>
+                                        <Link
+                                            href={route('projects.modules.sales.show', [project.id, s.id])}
+                                            className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-sm font-medium transition hover:opacity-80 shrink-0"
+                                            style={{ color: primaryColor }}
+                                            title="View"
+                                        >
+                                            <IconDocument className="h-4 w-4" />
+                                            <span className="hidden sm:inline sm:ml-0.5">View</span>
+                                        </Link>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

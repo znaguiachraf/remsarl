@@ -176,9 +176,8 @@ class PosService
             }
 
             $order->refresh();
-            $totalPaid = (float) $order->payments()->sum('amount');
             $totalDue = (float) $order->total;
-            if ($totalPaid >= $totalDue && $totalDue > 0) {
+            if ($totalDue > 0) {
                 $this->syncToSaleAndComplete($order);
             }
 
@@ -312,7 +311,8 @@ class PosService
 
     protected function generateSessionNumber(Project $project): string
     {
-        $count = PosSession::forProject($project)->count() + 1;
+        // session_number has global unique constraint - count all sessions, not per project
+        $count = PosSession::count() + 1;
 
         return 'SES-' . str_pad((string) $count, 6, '0', STR_PAD_LEFT);
     }

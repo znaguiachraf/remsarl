@@ -23,12 +23,13 @@ const paymentStatusColors = {
 };
 
 export default function SalesShow({ project, sale, can }) {
-    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const { currentProject, payment_methods = [] } = usePage().props;
+    const primaryColor = currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showPayModal, setShowPayModal] = useState(false);
 
     const payForm = useForm({
-        payment_method: 'cash',
+        payment_method: payment_methods[0]?.value || 'cash',
         amount: sale?.remaining?.toString() || '',
         reference: '',
         payment_date: new Date().toISOString().slice(0, 10),
@@ -201,11 +202,9 @@ export default function SalesShow({ project, sale, can }) {
                                     onChange={(e) => payForm.setData('payment_method', e.target.value)}
                                     className={selectClass + ' w-full'}
                                 >
-                                    <option value="cash">Cash</option>
-                                    <option value="card">Card</option>
-                                    <option value="transfer">Transfer</option>
-                                    <option value="check">Check</option>
-                                    <option value="other">Other</option>
+                                    {payment_methods.map((m) => (
+                                        <option key={m.value} value={m.value}>{m.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

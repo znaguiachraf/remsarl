@@ -15,7 +15,7 @@ class SupplierController extends Controller
         $this->authorize('viewAny', [Supplier::class, $project]);
 
         $query = Supplier::forProject($project)
-            ->withCount(['products', 'expenses'])
+            ->withCount('products')
             ->orderBy('name');
 
         if ($request->filled('is_active')) {
@@ -48,7 +48,6 @@ class SupplierController extends Controller
                     'phone' => $s->phone,
                     'is_active' => $s->is_active,
                     'products_count' => $s->products_count,
-                    'expenses_count' => $s->expenses_count,
                     'can_update' => $user->can('update', $s),
                     'can_delete' => $user->can('delete', $s),
                 ]),
@@ -103,7 +102,7 @@ class SupplierController extends Controller
         $this->authorize('view', $supplier);
         $this->ensureSupplierBelongsToProject($project, $supplier);
 
-        $supplier->load(['products' => fn ($q) => $q->orderBy('name'), 'expenses' => fn ($q) => $q->orderByDesc('expense_date')->limit(20)]);
+        $supplier->load(['products' => fn ($q) => $q->orderBy('name')]);
         $user = request()->user();
 
         return Inertia::render('Suppliers/Show', [
@@ -126,14 +125,6 @@ class SupplierController extends Controller
                     'price' => (float) $p->price,
                     'unit' => $p->unit,
                     'is_active' => $p->is_active,
-                ]),
-                'expenses' => $supplier->expenses->map(fn ($e) => [
-                    'id' => $e->id,
-                    'reference' => $e->reference,
-                    'description' => $e->description,
-                    'amount' => (float) $e->amount,
-                    'status' => $e->status->value,
-                    'expense_date' => $e->expense_date->format('Y-m-d'),
                 ]),
             ],
             'can' => [
