@@ -68,6 +68,11 @@ class Worker extends Model
         return $this->hasMany(Vacation::class);
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");

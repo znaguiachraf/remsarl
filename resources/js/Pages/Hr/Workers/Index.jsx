@@ -140,21 +140,21 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
                 />
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Worker</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Contact</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Contract</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Salary</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Worker</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Contact</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Contract</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Salary</th>
+                            <th className="px-4 py-3 sm:px-6 text-right text-xs font-medium uppercase tracking-wider text-gray-500 bg-gray-50 sticky right-0 shrink-0">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {workers?.data?.map((w) => (
                             <tr key={w.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4 sm:px-6">
                                     <Link
                                         href={route('projects.modules.hr.workers.show', [project.id, w.id])}
                                         className="font-medium text-gray-900 hover:underline"
@@ -166,10 +166,10 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
                                         <div className="text-xs text-gray-500">#{w.employee_number}</div>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
+                                <td className="px-4 py-4 sm:px-6 text-sm text-gray-600">
                                     {w.email || w.phone || '—'}
                                 </td>
-                                <td className="px-6 py-4 text-sm">
+                                <td className="px-4 py-4 sm:px-6 text-sm">
                                     {w.active_contract ? (
                                         <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
                                             {w.active_contract.type_label}
@@ -178,32 +178,36 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
                                         <span className="text-gray-400">No contract</span>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
+                                <td className="px-4 py-4 sm:px-6 text-sm text-gray-600">
                                     {w.active_contract ? (
                                         <><IconDollar className="inline h-4 w-4 text-gray-400" /> {Number(w.active_contract.salary_amount).toLocaleString()}</>
                                     ) : (
                                         '—'
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right">
-                                    <div className="flex items-center justify-end gap-2">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-right bg-white sticky right-0 shrink-0 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.05)] min-w-[80px]">
+                                    <div className="flex items-center justify-end gap-1 sm:gap-2">
                                         {w.can_update && (
                                             <button
                                                 type="button"
                                                 onClick={() => openEditModal(w)}
-                                                className="text-sm font-medium transition hover:opacity-80"
+                                                className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 rounded transition hover:opacity-80 shrink-0"
                                                 style={{ color: primaryColor }}
+                                                title="Edit"
                                             >
-                                                <IconPencil className="inline h-4 w-4" /> Edit
+                                                <IconPencil className="h-4 w-4" />
+                                                <span className="hidden sm:inline sm:ml-0.5">Edit</span>
                                             </button>
                                         )}
                                         {w.can_delete && (
                                             <button
                                                 type="button"
                                                 onClick={() => setDeletingWorker(w)}
-                                                className="text-sm font-medium text-red-600 hover:text-red-500"
+                                                className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-red-600 hover:text-red-500 hover:bg-red-50 rounded shrink-0"
+                                                title="Delete"
                                             >
-                                                <IconTrash className="inline h-4 w-4" /> Delete
+                                                <IconTrash className="h-4 w-4" />
+                                                <span className="hidden sm:inline sm:ml-0.5">Delete</span>
                                             </button>
                                         )}
                                     </div>

@@ -3,6 +3,7 @@ import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/project/StatusBadge';
+import { IconPencil, IconTrash } from '@/Components/expense/Icons';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -74,20 +75,20 @@ export default function WorkersIndex({ project, workers, roles }) {
         >
             <Head title={`${project?.name} - Workers`} />
 
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 User
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Role
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Status
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="px-4 py-3 sm:px-6 text-right text-xs font-medium uppercase tracking-wider text-gray-500 bg-gray-50 sticky right-0 shrink-0">
                                 Actions
                             </th>
                         </tr>
@@ -95,37 +96,40 @@ export default function WorkersIndex({ project, workers, roles }) {
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {workers?.map((worker) => (
                             <tr key={worker.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-4 py-4 sm:px-6">
                                     <div>
                                         <div className="font-medium text-gray-900">{worker.name}</div>
                                         <div className="text-sm text-gray-500">{worker.email}</div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                                     <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-sm font-medium text-gray-800">
                                         {worker.role?.name || '—'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                                     <StatusBadge status={worker.status} size="sm" />
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right">
-                                    <div className="flex items-center justify-end gap-2">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-right bg-white sticky right-0 shrink-0 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.05)] min-w-[80px]">
+                                    <div className="flex items-center justify-end gap-1 sm:gap-2">
                                         <button
                                             type="button"
                                             onClick={() => openRoleModal(worker)}
-                                            className="text-sm font-medium transition hover:opacity-80"
+                                            className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 rounded transition hover:opacity-80 shrink-0"
                                             style={{ color: primaryColor }}
+                                            title="Change role"
                                         >
-                                            Change Role
+                                            <IconPencil className="h-4 w-4" />
+                                            <span className="hidden sm:inline sm:ml-0.5">Change Role</span>
                                         </button>
-                                        <span className="text-gray-300">|</span>
                                         <button
                                             type="button"
                                             onClick={() => removeWorker(worker.id)}
-                                            className="text-sm font-medium text-red-600 hover:text-red-500"
+                                            className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-red-600 hover:text-red-500 hover:bg-red-50 rounded shrink-0"
+                                            title="Remove"
                                         >
-                                            Remove
+                                            <IconTrash className="h-4 w-4" />
+                                            <span className="hidden sm:inline sm:ml-0.5">Remove</span>
                                         </button>
                                     </div>
                                 </td>

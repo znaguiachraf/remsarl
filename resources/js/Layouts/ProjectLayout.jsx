@@ -36,7 +36,7 @@ export default function ProjectLayout({ header, children }) {
 
                 {/* Mobile sidebar - full-width drawer with safe areas */}
                 <div
-                    className={`fixed inset-y-0 left-0 z-40 w-[min(20rem,85vw)] max-w-full transform bg-gray-800 shadow-xl transition-transform duration-300 ease-out md:hidden ${
+                    className={`fixed inset-y-0 left-0 z-40 w-[min(20rem,85vw)] max-w-full transform shadow-xl transition-transform duration-300 ease-out md:hidden ${
                         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
                     style={{
@@ -74,7 +74,7 @@ export default function ProjectLayout({ header, children }) {
                     <main className="flex-1">
                         {header && (
                             <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
-                                <div className="mx-auto max-w-7xl">{header}</div>
+                                <div className="max-w-7xl text-left">{header}</div>
                             </div>
                         )}
                         <div className="p-4 sm:p-6">{children}</div>

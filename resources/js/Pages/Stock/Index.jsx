@@ -133,28 +133,28 @@ export default function StockIndex({ project, products, categories, filters, can
                 </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Product</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Stock</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Min. Stock</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Product</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Stock</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Min. Stock</th>
+                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th className="px-4 py-3 sm:px-6 text-right text-xs font-medium uppercase tracking-wider text-gray-500 bg-gray-50 sticky right-0 shrink-0">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {products?.data?.map((p) => (
                             <tr key={p.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4 sm:px-6">
                                     <div className="font-medium text-gray-900">{p.name}</div>
                                     {p.supplier && (
                                         <div className="text-sm text-gray-500">{p.supplier.name}</div>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                                     {p.category ? (
                                         <span
                                             className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -166,13 +166,13 @@ export default function StockIndex({ project, products, categories, filters, can
                                         <span className="text-gray-400">—</span>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {p.stock_quantity} {p.unit}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-sm text-gray-600">
                                     {p.minimum_stock}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                                     {p.is_low_stock ? (
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
                                             Low stock
@@ -183,15 +183,17 @@ export default function StockIndex({ project, products, categories, filters, can
                                         </span>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-right bg-white sticky right-0 shrink-0 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.05)] min-w-[80px]">
                                     {p.can_adjust && (
                                         <button
                                             type="button"
                                             onClick={() => openAdjustModal(p)}
-                                            className="text-sm font-medium transition hover:opacity-80"
+                                            className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-sm font-medium transition hover:opacity-80 shrink-0"
                                             style={{ color: primaryColor }}
+                                            title="Adjust stock"
                                         >
-                                            <IconPencil className="inline h-4 w-4" /> Adjust
+                                            <IconPencil className="h-4 w-4" />
+                                            <span className="hidden sm:inline sm:ml-0.5">Adjust</span>
                                         </button>
                                     )}
                                 </td>
