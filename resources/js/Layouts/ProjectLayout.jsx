@@ -74,7 +74,7 @@ export default function ProjectLayout({ header, children }) {
                     <main className="flex-1">
                         {header && (
                             <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
-                                <div className="mx-auto max-w-7xl">{header}</div>
+                                <div className="max-w-7xl text-left">{header}</div>
                             </div>
                         )}
                         <div className="p-4 sm:p-6">{children}</div>
