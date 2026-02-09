@@ -22,9 +22,12 @@ class AnalyticsController extends Controller
         $period = $request->get('period', 'month');
         $groupBy = $request->get('time_group', 'hour');
         $months = min(24, max(1, (int) $request->get('months', 12)));
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
 
         $salesVsExpenses = $this->analyticsService->salesVsExpenses($project, $period, $months);
-        $topProducts = $this->analyticsService->topProducts($project, 5, 'revenue');
+        $expensesByCategory = $this->analyticsService->expensesByCategory($project, $fromDate, $toDate);
+        $topProducts = $this->analyticsService->topProducts($project, 50, 'revenue', $fromDate, $toDate);
         $salesByHour = $this->analyticsService->salesTimeAnalysis($project, 'hour');
         $salesByDay = $this->analyticsService->salesTimeAnalysis($project, 'day');
 
@@ -36,6 +39,7 @@ class AnalyticsController extends Controller
                 'secondary_color' => $project->secondary_color ?? '#10B981',
             ],
             'salesVsExpenses' => $salesVsExpenses,
+            'expensesByCategory' => $expensesByCategory,
             'topProducts' => $topProducts,
             'salesByHour' => $salesByHour,
             'salesByDay' => $salesByDay,
@@ -43,6 +47,8 @@ class AnalyticsController extends Controller
                 'period' => $period,
                 'time_group' => $groupBy,
                 'months' => $months,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
             ],
         ]);
     }

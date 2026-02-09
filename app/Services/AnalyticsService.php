@@ -90,13 +90,57 @@ class AnalyticsService
     }
 
     /**
-     * Top products by quantity sold or revenue.
+     * Expenses by category for pie chart.
      */
-    public function topProducts(Project $project, int $limit = 5, string $by = 'revenue'): array
+    public function expensesByCategory(Project $project, ?string $fromDate = null, ?string $toDate = null): array
     {
-        $saleIds = Sale::forProject($project)
-            ->whereNotIn('status', ['cancelled', 'refunded'])
-            ->pluck('id');
+        $query = Expense::query()
+            ->where('expenses.project_id', $project->id)
+            ->leftJoin('expense_categories', function ($join) use ($project) {
+                $join->on('expenses.expense_category_id', '=', 'expense_categories.id')
+                    ->where('expense_categories.project_id', '=', $project->id);
+            });
+
+        if ($fromDate) {
+            $query->where('expenses.expense_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $query->where('expenses.expense_date', '<=', $toDate);
+        }
+
+        $coalesce = $this->isSqlite()
+            ? "COALESCE(expense_categories.name, 'Uncategorized')"
+            : "COALESCE(expense_categories.name, 'Uncategorized')";
+
+        $rows = $query
+            ->selectRaw("{$coalesce} as category_name, expense_categories.color, SUM(expenses.amount) as total")
+            ->groupBy(DB::raw($coalesce), 'expense_categories.color')
+            ->orderByDesc('total')
+            ->get();
+
+        return $rows->map(fn ($row) => [
+            'name' => $row->category_name ?? 'Uncategorized',
+            'value' => (float) $row->total,
+            'color' => $row->color ?? null,
+        ])->toArray();
+    }
+
+    /**
+     * Top products by quantity sold or revenue. Optional date range filter.
+     */
+    public function topProducts(Project $project, int $limit = 20, string $by = 'revenue', ?string $fromDate = null, ?string $toDate = null): array
+    {
+        $saleQuery = Sale::forProject($project)
+            ->whereNotIn('status', ['cancelled', 'refunded']);
+
+        if ($fromDate) {
+            $saleQuery->whereDate('created_at', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $saleQuery->whereDate('created_at', '<=', $toDate);
+        }
+
+        $saleIds = $saleQuery->pluck('id');
 
         $orderBy = $by === 'quantity' ? 'total_quantity' : 'total_revenue';
 

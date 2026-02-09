@@ -9,15 +9,21 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
 } from 'recharts';
 
 function formatValue(value) {
     return Number(value).toLocaleString();
 }
 
+const PIE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+
 export default function AnalyticsIndex({
     project,
     salesVsExpenses,
+    expensesByCategory,
     topProducts,
     salesByHour,
     salesByDay,
@@ -111,29 +117,37 @@ export default function AnalyticsIndex({
                     </div>
                 </div>
 
-                {/* Top Products & Sales Time - 2 columns */}
+                {/* Expenses Pie Chart & Sales by Hour - 2 columns */}
                 <div className="grid gap-6 lg:grid-cols-2">
-                    {/* Top Products */}
+                    {/* Expenses by Category - Pie Chart */}
                     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 text-lg font-medium text-gray-900">Top 5 Products by Revenue</h3>
-                        {topProducts?.length > 0 ? (
+                        <h3 className="mb-4 text-lg font-medium text-gray-900">Expenses by Category</h3>
+                        {expensesByCategory?.length > 0 ? (
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={topProducts}
-                                        layout="vertical"
-                                        margin={{ top: 5, right: 20, left: 80, bottom: 5 }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis type="number" tickFormatter={(v) => formatValue(v)} />
-                                        <YAxis type="category" dataKey="product_name" width={75} tick={{ fontSize: 11 }} />
+                                    <PieChart>
+                                        <Pie
+                                            data={expensesByCategory}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={80}
+                                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                        >
+                                            {expensesByCategory.map((entry, index) => (
+                                                <Cell
+                                                    key={entry.name}
+                                                    fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]}
+                                                />
+                                            ))}
+                                        </Pie>
                                         <Tooltip formatter={(value) => formatValue(value)} />
-                                        <Bar dataKey="total_revenue" name="Revenue" fill={primaryColor} radius={[0, 4, 4, 0]} />
-                                    </BarChart>
+                                    </PieChart>
                                 </ResponsiveContainer>
                             </div>
                         ) : (
-                            <p className="text-sm text-gray-500">No product sales data yet.</p>
+                            <p className="text-sm text-gray-500">No expense data yet.</p>
                         )}
                     </div>
 
@@ -163,6 +177,60 @@ export default function AnalyticsIndex({
                             <p className="text-sm text-gray-500">No sales time data yet.</p>
                         )}
                     </div>
+                </div>
+
+                {/* Top Products Datatable with Date Filter */}
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm overflow-hidden">
+                    <h3 className="mb-4 text-lg font-medium text-gray-900">Top Products Selling</h3>
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700">From:</label>
+                        <input
+                            type="date"
+                            value={filters.from_date ?? ''}
+                            onChange={(e) => applyFilters({ from_date: e.target.value || undefined })}
+                            className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                        <label className="text-sm font-medium text-gray-700">To:</label>
+                        <input
+                            type="date"
+                            value={filters.to_date ?? ''}
+                            onChange={(e) => applyFilters({ to_date: e.target.value || undefined })}
+                            className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => applyFilters({ from_date: undefined, to_date: undefined })}
+                            className="text-sm text-gray-600 hover:text-gray-900 underline"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                    {topProducts?.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">#</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Product</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Quantity Sold</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 bg-white">
+                                    {topProducts.map((row, idx) => (
+                                        <tr key={row.product_id} className="hover:bg-gray-50">
+                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{idx + 1}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{row.product_name}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-right text-gray-600">{formatValue(row.total_quantity)}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-right font-medium text-gray-900">{formatValue(row.total_revenue)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500">No product sales data for the selected date range.</p>
+                    )}
                 </div>
 
                 {/* Sales by Day of Week */}
