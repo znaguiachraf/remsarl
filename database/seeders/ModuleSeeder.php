@@ -22,6 +22,7 @@ class ModuleSeeder extends Seeder
             ['key' => 'purchase', 'name' => 'Purchase', 'description' => 'Purchase orders, receiving, and supplier bills', 'icon' => 'shopping-bag', 'sort_order' => 10],
             ['key' => 'hr', 'name' => 'HR & Workers', 'description' => 'Workers, contracts, salaries, attendance, vacations', 'icon' => 'users', 'sort_order' => 11],
             ['key' => 'logs', 'name' => 'Activity Logs', 'description' => 'Project activity audit trail', 'icon' => 'file-text', 'sort_order' => 12],
+            ['key' => 'analytics', 'name' => 'Analytics', 'description' => 'Sales vs expenses, top products, and sales time analysis', 'icon' => 'trending-up', 'sort_order' => 13],
         ];
 
         foreach ($modules as $module) {

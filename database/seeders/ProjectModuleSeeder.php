@@ -19,9 +19,9 @@ class ProjectModuleSeeder extends Seeder
         }
 
         $enabledModuleSets = [
-            ['pos', 'products', 'stock', 'sales', 'payments', 'expenses', 'suppliers', 'purchase', 'logs'],
-            ['tasks', 'products', 'orders', 'payments', 'suppliers', 'purchase', 'logs'],
-            ['products', 'stock', 'sales', 'logs'],
+            ['pos', 'products', 'stock', 'sales', 'payments', 'expenses', 'suppliers', 'purchase', 'analytics', 'logs'],
+            ['tasks', 'products', 'orders', 'payments', 'suppliers', 'purchase', 'analytics', 'logs'],
+            ['products', 'stock', 'sales', 'analytics', 'logs'],
         ];
 
         foreach ($projects as $index => $project) {

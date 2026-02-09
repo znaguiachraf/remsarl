@@ -76,6 +76,7 @@ class Module extends Model
             'purchase',
             'hr',
             'logs',
+            'analytics',
         ];
     }
 }

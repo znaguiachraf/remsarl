@@ -29,19 +29,21 @@ class InvoiceController extends Controller
     /**
      * Generate and download PDF invoice for sale.
      */
-    public function pdf(Project $project, Sale $sale)
+    public function pdf(Project $project, Sale $sale, Request $request)
     {
         $this->authorize('view', $sale);
         $this->ensureSaleBelongsToProject($project, $sale);
 
         $pdf = $this->invoiceService->generatePdf($sale);
         $invoice = $sale->invoice;
+        $isPdf = class_exists(\Barryvdh\DomPDF\Facade\Pdf::class);
+        $ext = $isPdf ? 'pdf' : 'html';
+        $filename = 'invoice-' . ($invoice->invoice_number ?? $sale->sale_number) . '.' . $ext;
+        $disposition = $request->boolean('download') ? 'attachment' : 'inline';
 
         return response($pdf, 200, [
-            'Content-Type' => class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)
-                ? 'application/pdf'
-                : 'text/html',
-            'Content-Disposition' => 'inline; filename="invoice-' . ($invoice->invoice_number ?? $sale->sale_number) . '.pdf"',
+            'Content-Type' => $isPdf ? 'application/pdf' : 'text/html',
+            'Content-Disposition' => "{$disposition}; filename=\"{$filename}\"",
         ]);
     }
 

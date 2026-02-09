@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\WorkerController as AdminWorkerController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectSettingsController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
@@ -76,6 +78,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('{project}')->middleware('project.access')->group(function () {
             Route::get('/', [ProjectController::class, 'show'])->name('show');
 
+            Route::prefix('settings')->name('settings.')->group(function () {
+                Route::get('/', [ProjectSettingsController::class, 'index'])->name('index');
+                Route::patch('/project', [ProjectSettingsController::class, 'updateProject'])->name('project.update');
+                Route::patch('/email', [ProjectSettingsController::class, 'updateEmail'])->name('email.update');
+            });
+
             Route::prefix('workers')->name('workers.')->group(function () {
                 Route::get('/', [ProjectWorkerController::class, 'index'])->name('index');
                 Route::post('/', [ProjectWorkerController::class, 'store'])->name('store');
@@ -88,6 +96,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::prefix('notes')->name('notes.')->group(function () {
                 Route::get('/', [EmployeeNoteController::class, 'index'])->name('index');
                 Route::post('/', [EmployeeNoteController::class, 'store'])->name('store');
+            });
+
+            Route::prefix('modules/analytics')->name('modules.analytics.')->middleware('project.module:analytics')->group(function () {
+                Route::get('/', [AnalyticsController::class, 'index'])->name('index');
             });
 
             Route::prefix('modules/logs')->name('modules.logs.')->middleware('project.module:logs')->group(function () {

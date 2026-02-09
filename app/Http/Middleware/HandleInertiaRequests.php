@@ -99,6 +99,7 @@ class HandleInertiaRequests extends Middleware
             'secondary_color' => $project->secondary_color,
             'status' => $project->status->value,
             'status_label' => $project->status->label(),
+            'can_update' => $user?->can('update', $project) ?? false,
         ];
     }
 

@@ -81,7 +81,7 @@ class InvoiceService
 
     /**
      * Send invoice email to sale customer.
-     * Requires invoice.customer_email or fallback email.
+     * Uses project SMTP config when configured; otherwise uses default mailer.
      */
     public function sendEmail(Sale $sale, ?string $toEmail = null): void
     {
@@ -94,18 +94,46 @@ class InvoiceService
 
         $pdf = $this->generatePdf($sale);
         $sale->load(['project']);
+        $project = $sale->project;
 
-        // Use Mailable when available
+        $mailer = $this->resolveMailerForProject($project);
+
         if (class_exists(\App\Mail\InvoiceMail::class)) {
-            \Illuminate\Support\Facades\Mail::to($email)->send(
-                new \App\Mail\InvoiceMail($invoice, $sale, $pdf)
-            );
+            $mailer->to($email)->send(new \App\Mail\InvoiceMail($invoice, $sale, $pdf));
+
             return;
         }
 
-        \Illuminate\Support\Facades\Mail::raw(
+        $fromAddress = $project->mail_from_address ?? config('mail.from.address');
+        $fromName = $project->mail_from_name ?? config('mail.from.name');
+
+        $mailer->raw(
             "Invoice {$invoice->invoice_number} for Sale {$sale->sale_number}. Total: {$invoice->total_amount}",
-            fn ($m) => $m->to($email)->subject("Invoice {$invoice->invoice_number}")
+            fn ($m) => $m->from($fromAddress, $fromName)->to($email)->subject("Invoice {$invoice->invoice_number}")
         );
+    }
+
+    /**
+     * Resolve mailer for project. Uses project SMTP config when available.
+     */
+    protected function resolveMailerForProject($project)
+    {
+        if (!$project || empty($project->smtp_host)) {
+            return \Illuminate\Support\Facades\Mail::mailer();
+        }
+
+        $config = [
+            'transport' => 'smtp',
+            'host' => $project->smtp_host,
+            'port' => $project->smtp_port ?? 587,
+            'encryption' => in_array($project->smtp_encryption, ['tls', 'ssl']) ? $project->smtp_encryption : null,
+            'username' => $project->smtp_username,
+            'password' => $project->decrypted_smtp_password,
+            'timeout' => null,
+        ];
+
+        \Illuminate\Support\Facades\Config::set('mail.mailers.project_smtp', $config);
+
+        return \Illuminate\Support\Facades\Mail::mailer('project_smtp');
     }
 }

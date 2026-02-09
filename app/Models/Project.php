@@ -29,6 +29,14 @@ class Project extends Model
         'status',
         'owner_id',
         'config',
+        'mail_from_name',
+        'mail_from_address',
+        'smtp_driver',
+        'smtp_host',
+        'smtp_port',
+        'smtp_username',
+        'smtp_password',
+        'smtp_encryption',
     ];
 
     protected $casts = [
@@ -93,6 +101,19 @@ class Project extends Model
             ->where('module_key', $moduleKey)
             ->where('is_enabled', true)
             ->exists();
+    }
+
+    public function getDecryptedSmtpPasswordAttribute(): ?string
+    {
+        if (empty($this->smtp_password)) {
+            return null;
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($this->smtp_password);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function getLogoUrlAttribute(): ?string
