@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Models\PosOrder;
 use App\Models\PosSession;
 use App\Models\Product;
@@ -128,7 +129,7 @@ class PosController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'payments' => 'nullable|array',
-            'payments.*.payment_method' => 'required|string|in:cash,card,transfer,check,other',
+            'payments.*.payment_method' => 'required|string|' . PaymentMethod::validationRule(),
             'payments.*.amount' => 'required|numeric|min:0.01',
             'payments.*.reference' => 'nullable|string|max:100',
         ]);
@@ -163,7 +164,7 @@ class PosController extends Controller
         $this->authorize('payOrder', $order);
 
         $validated = $request->validate([
-            'payment_method' => 'required|string|in:cash,card,transfer,check,other',
+            'payment_method' => 'required|string|' . PaymentMethod::validationRule(),
             'amount' => 'required|numeric|min:0.01',
             'reference' => 'nullable|string|max:100',
         ]);

@@ -149,7 +149,6 @@ export default function SuppliersIndex({ project, suppliers, filters, can }) {
                             <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Supplier</th>
                             <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Contact</th>
                             <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Products</th>
-                            <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Expenses</th>
                             <th className="px-4 py-3 sm:px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                             <th className="px-4 py-3 sm:px-6 text-right text-xs font-medium uppercase tracking-wider text-gray-500 bg-gray-50 sticky right-0 shrink-0">Actions</th>
                         </tr>
@@ -171,9 +170,6 @@ export default function SuppliersIndex({ project, suppliers, filters, can }) {
                                 </td>
                                 <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-sm text-gray-600">
                                     {s.products_count}
-                                </td>
-                                <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-sm text-gray-600">
-                                    {s.expenses_count}
                                 </td>
                                 <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${s.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>

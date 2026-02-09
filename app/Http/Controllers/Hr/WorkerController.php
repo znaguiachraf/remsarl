@@ -106,6 +106,7 @@ class WorkerController extends Controller
             'cnssRecords',
             'salaries' => fn ($q) => $q->orderByDesc('year')->orderByDesc('month')->limit(12),
             'vacations' => fn ($q) => $q->orderByDesc('start_date')->limit(10),
+            'employeeNotes' => fn ($q) => $q->with('author')->latest()->limit(50),
         ]);
 
         $user = $request->user();
@@ -169,6 +170,13 @@ class WorkerController extends Controller
                     'can_approve' => $user->can('approve', $v),
                     'can_reject' => $user->can('reject', $v),
                 ]),
+                'employee_notes' => $worker->employeeNotes->filter(fn ($n) => $n->author)->map(fn ($n) => [
+                    'id' => $n->id,
+                    'content' => $n->content,
+                    'direction' => $n->direction,
+                    'created_at' => $n->created_at->toISOString(),
+                    'author_name' => $n->author->name,
+                ])->values()->toArray(),
             ],
             'can' => [
                 'update' => $user->can('update', $worker),

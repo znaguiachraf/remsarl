@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\ProjectDashboardService;
 use App\Services\ProjectService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,7 +12,8 @@ use Inertia\Response;
 class ProjectController extends Controller
 {
     public function __construct(
-        protected ProjectService $projectService
+        protected ProjectService $projectService,
+        protected ProjectDashboardService $dashboardService
     ) {}
 
     public function index(): Response
@@ -62,7 +64,7 @@ class ProjectController extends Controller
             'logo' => 'nullable|image|max:2048',
             'status' => 'nullable|in:active,suspended,archived',
             'enabled_modules' => 'nullable|array',
-            'enabled_modules.*' => 'string|in:pos,tasks,payments,orders,products,stock,sales,expenses,suppliers,hr,logs',
+            'enabled_modules.*' => 'string|in:pos,tasks,payments,orders,products,stock,sales,expenses,suppliers,purchase,hr,logs',
         ]);
 
         $logoPath = null;
@@ -84,6 +86,8 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
+        $dashboard = $this->dashboardService->getData($project, $request->user());
+
         return Inertia::render('Projects/Dashboard', [
             'project' => [
                 'id' => $project->id,
@@ -95,6 +99,11 @@ class ProjectController extends Controller
                 'status' => $project->status->value,
                 'description' => $project->description,
             ],
+            'kpis' => $dashboard['kpis'],
+            'alerts' => $dashboard['alerts'],
+            'quickActions' => $dashboard['quickActions'],
+            'chartData' => $dashboard['chartData'],
+            'employeeNotes' => $dashboard['employeeNotes'],
             'can' => [
                 'update' => $request->user()->can('update', $project),
             ],

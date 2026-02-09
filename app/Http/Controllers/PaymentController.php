@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Models\Payment;
 use App\Models\Project;
 use App\Services\PaymentService;
@@ -52,7 +53,6 @@ class PaymentController extends Controller
             ],
             'filterOptions' => [
                 'statuses' => ['paid', 'partial', 'failed', 'refunded'],
-                'payment_methods' => ['cash', 'card', 'transfer', 'check', 'other'],
             ],
             'can' => [
                 'create' => false,
@@ -94,7 +94,7 @@ class PaymentController extends Controller
         $this->ensurePaymentBelongsToProject($project, $payment);
 
         $validated = $request->validate([
-            'payment_method' => 'required|string|in:cash,card,transfer,check,other',
+            'payment_method' => 'required|string|' . PaymentMethod::validationRule(),
             'amount' => 'required|numeric|min:0.01',
             'reference' => 'nullable|string|max:100',
             'payment_date' => 'required|date',

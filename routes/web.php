@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\WorkerController as AdminWorkerController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectSettingsController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaskController;
@@ -27,6 +30,8 @@ use App\Http\Controllers\Hr\SalaryController as HrSalaryController;
 use App\Http\Controllers\Hr\AttendanceController as HrAttendanceController;
 use App\Http\Controllers\Hr\VacationController as HrVacationController;
 use App\Http\Controllers\Hr\CnssRecordController as HrCnssRecordController;
+use App\Http\Controllers\EmployeeNoteController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectWorkerController;
 use Illuminate\Foundation\Application;
@@ -73,6 +78,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('{project}')->middleware('project.access')->group(function () {
             Route::get('/', [ProjectController::class, 'show'])->name('show');
 
+            Route::prefix('settings')->name('settings.')->group(function () {
+                Route::get('/', [ProjectSettingsController::class, 'index'])->name('index');
+                Route::patch('/project', [ProjectSettingsController::class, 'updateProject'])->name('project.update');
+                Route::patch('/email', [ProjectSettingsController::class, 'updateEmail'])->name('email.update');
+            });
+
             Route::prefix('workers')->name('workers.')->group(function () {
                 Route::get('/', [ProjectWorkerController::class, 'index'])->name('index');
                 Route::post('/', [ProjectWorkerController::class, 'store'])->name('store');
@@ -81,6 +92,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
 
             Route::get('/roles', [ProjectRoleController::class, 'index'])->name('roles.index');
+
+            Route::prefix('notes')->name('notes.')->group(function () {
+                Route::get('/', [EmployeeNoteController::class, 'index'])->name('index');
+                Route::post('/', [EmployeeNoteController::class, 'store'])->name('store');
+            });
+
+            Route::prefix('modules/analytics')->name('modules.analytics.')->middleware('project.module:analytics')->group(function () {
+                Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+            });
 
             Route::prefix('modules/logs')->name('modules.logs.')->middleware('project.module:logs')->group(function () {
                 Route::get('/', [ActivityLogController::class, 'index'])->name('index');
@@ -137,6 +157,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::post('/', [SaleController::class, 'store'])->name('store');
                 Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
                 Route::post('/{sale}/pay', [SaleController::class, 'pay'])->name('pay');
+                Route::post('/{sale}/invoice', [InvoiceController::class, 'createFromSale'])->name('invoice.create');
+                Route::get('/{sale}/invoice/pdf', [InvoiceController::class, 'pdf'])->name('invoice.pdf');
+                Route::post('/{sale}/invoice/send', [InvoiceController::class, 'send'])->name('invoice.send');
             });
 
             Route::prefix('modules/suppliers')->name('modules.suppliers.')->middleware('project.module:suppliers')->group(function () {
@@ -175,6 +198,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::post('/vacations/{vacation}/reject', [HrVacationController::class, 'reject'])->name('vacations.reject');
                 Route::patch('/cnss-records/{cnssRecord}', [HrCnssRecordController::class, 'update'])->name('cnss.update');
                 Route::delete('/cnss-records/{cnssRecord}', [HrCnssRecordController::class, 'destroy'])->name('cnss.destroy');
+            });
+
+            Route::prefix('modules/purchase')->name('modules.purchase.')->middleware('project.module:purchase')->group(function () {
+                Route::get('/', [PurchaseController::class, 'index'])->name('index');
+                Route::get('/create', [PurchaseController::class, 'create'])->name('create');
+                Route::post('/', [PurchaseController::class, 'store'])->name('store');
+                Route::get('/{order}', [PurchaseController::class, 'show'])->name('show');
+                Route::get('/{order}/edit', [PurchaseController::class, 'edit'])->name('edit');
+                Route::patch('/{order}', [PurchaseController::class, 'update'])->name('update');
+                Route::post('/{order}/receive', [PurchaseController::class, 'receive'])->name('receive');
+                Route::patch('/{order}/bill', [PurchaseController::class, 'updateBill'])->name('bill');
+                Route::post('/{order}/send', [PurchaseController::class, 'send'])->name('send');
+                Route::post('/{order}/cancel', [PurchaseController::class, 'cancel'])->name('cancel');
             });
 
             Route::prefix('modules/expenses')->name('modules.expenses.')->middleware('project.module:expenses')->group(function () {

@@ -193,62 +193,6 @@ export default function SuppliersShow({ project, supplier, can }) {
                     )}
                 </div>
 
-                {/* Linked Expenses */}
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                        <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                            <IconDollar className="h-5 w-5 text-gray-500" />
-                            Recent Expenses
-                        </h3>
-                        <Link
-                            href={route('projects.modules.expenses.index', project.id)}
-                            className="text-sm font-medium hover:underline"
-                            style={{ color: primaryColor }}
-                        >
-                            View all expenses
-                        </Link>
-                    </div>
-                    {supplier.expenses?.length > 0 ? (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                                {supplier.expenses.map((e) => (
-                                    <tr key={e.id}>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{e.expense_date}</td>
-                                        <td className="px-6 py-4">
-                                            <Link
-                                                href={route('projects.modules.expenses.index', project.id)}
-                                                className="font-medium text-gray-900 hover:underline"
-                                                style={{ color: primaryColor }}
-                                            >
-                                                {e.reference || e.description}
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">
-                                            <IconDollar className="inline h-4 w-4 text-gray-400" /> {Number(e.amount).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${e.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                                                {e.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <div className="px-6 py-8 text-center text-sm text-gray-500">
-                            No expenses linked to this supplier.
-                        </div>
-                    )}
-                </div>
             </div>
 
             {/* Edit Modal */}
@@ -338,7 +282,7 @@ export default function SuppliersShow({ project, supplier, can }) {
                     <div className="p-6">
                         <h3 className="text-lg font-medium text-gray-900">Delete Supplier</h3>
                         <p className="mt-2 text-sm text-gray-600">
-                            Are you sure you want to delete &quot;{supplier.name}&quot;? Products and expenses linked to this supplier will not be deleted.
+                            Are you sure you want to delete &quot;{supplier.name}&quot;? Products linked to this supplier will not be deleted.
                         </p>
                         <div className="mt-6 flex justify-end gap-2">
                             <SecondaryButton onClick={() => setShowDeleteModal(false)}>Cancel</SecondaryButton>

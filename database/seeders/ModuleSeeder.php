@@ -19,8 +19,10 @@ class ModuleSeeder extends Seeder
             ['key' => 'sales', 'name' => 'Sales', 'description' => 'Sales tracking and reports', 'icon' => 'trending-up', 'sort_order' => 7],
             ['key' => 'expenses', 'name' => 'Expenses', 'description' => 'Expense tracking', 'icon' => 'dollar-sign', 'sort_order' => 8],
             ['key' => 'suppliers', 'name' => 'Supplier Management', 'description' => 'Supplier and vendor management', 'icon' => 'truck', 'sort_order' => 9],
-            ['key' => 'hr', 'name' => 'HR & Workers', 'description' => 'Workers, contracts, salaries, attendance, vacations', 'icon' => 'users', 'sort_order' => 10],
-            ['key' => 'logs', 'name' => 'Activity Logs', 'description' => 'Project activity audit trail', 'icon' => 'file-text', 'sort_order' => 11],
+            ['key' => 'purchase', 'name' => 'Purchase', 'description' => 'Purchase orders, receiving, and supplier bills', 'icon' => 'shopping-bag', 'sort_order' => 10],
+            ['key' => 'hr', 'name' => 'HR & Workers', 'description' => 'Workers, contracts, salaries, attendance, vacations', 'icon' => 'users', 'sort_order' => 11],
+            ['key' => 'logs', 'name' => 'Activity Logs', 'description' => 'Project activity audit trail', 'icon' => 'file-text', 'sort_order' => 12],
+            ['key' => 'analytics', 'name' => 'Analytics', 'description' => 'Sales vs expenses, top products, and sales time analysis', 'icon' => 'trending-up', 'sort_order' => 13],
         ];
 
         foreach ($modules as $module) {

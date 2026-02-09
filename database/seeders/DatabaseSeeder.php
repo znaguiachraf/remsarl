@@ -12,14 +12,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             ModuleSeeder::class,
             UserSeeder::class,
-            ProjectSeeder::class,
-            ProjectUserSeeder::class,
-            ProjectModuleSeeder::class,
-            SupplierSeeder::class,
-            ProductSeeder::class,
-            TaskSeeder::class,
-            ActivityLogSeeder::class,
-            FurnitureProjectSeeder::class,
+            RomabPromotetProductionSeeder::class,
         ]);
     }
 }

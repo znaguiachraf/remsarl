@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\Sale;
@@ -93,7 +94,7 @@ class SaleController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'payments' => 'nullable|array',
-            'payments.*.payment_method' => 'required|string|in:cash,card,transfer,check,other',
+            'payments.*.payment_method' => 'required|string|' . PaymentMethod::validationRule(),
             'payments.*.amount' => 'required|numeric|min:0.01',
             'payments.*.reference' => 'nullable|string|max:100',
             'payments.*.payment_date' => 'nullable|date',
@@ -131,7 +132,7 @@ class SaleController extends Controller
         $this->authorize('view', $sale);
         $this->ensureSaleBelongsToProject($project, $sale);
 
-        $sale->load(['saleItems.product', 'payments', 'user']);
+        $sale->load(['saleItems.product', 'payments', 'user', 'invoice']);
         $user = request()->user();
 
         return Inertia::render('Sales/Show', [
@@ -211,6 +212,12 @@ class SaleController extends Controller
                 'unit_price' => (float) $i->unit_price,
                 'total' => (float) $i->total,
             ])->values()->toArray(),
+            'invoice' => $s->invoice ? [
+                'id' => $s->invoice->id,
+                'invoice_number' => $s->invoice->invoice_number,
+                'total_amount' => (float) $s->invoice->total_amount,
+                'status' => $s->invoice->status,
+            ] : null,
             'payments' => $s->payments->map(fn ($p) => [
                 'id' => $p->id,
                 'payment_method' => $p->payment_method,

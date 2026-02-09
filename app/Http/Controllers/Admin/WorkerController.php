@@ -55,8 +55,8 @@ class WorkerController extends Controller
             'status' => $pu->status->value,
         ]);
 
-        $users = User::orderBy('name')->get(['id', 'name', 'email']);
-        $projects = Project::orderBy('name')->get(['id', 'name']);
+        $users = User::orderByDesc('created_at')->get(['id', 'name', 'email']);
+        $projects = Project::orderByDesc('created_at')->get(['id', 'name']);
         $roles = Role::orderBy('level', 'desc')->get(['id', 'name', 'slug']);
 
         return Inertia::render('Admin/Workers/Index', [

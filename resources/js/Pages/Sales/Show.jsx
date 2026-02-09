@@ -14,6 +14,8 @@ import {
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
+import { IconPrinter } from '@/Components/expense/Icons';
+
 const paymentStatusColors = {
     unpaid: 'bg-red-100 text-red-800',
     partial: 'bg-amber-100 text-amber-800',
@@ -23,12 +25,16 @@ const paymentStatusColors = {
 };
 
 export default function SalesShow({ project, sale, can }) {
-    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+    const { currentProject, payment_methods = [] } = usePage().props;
+    const primaryColor = currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showPayModal, setShowPayModal] = useState(false);
+    const [showSendModal, setShowSendModal] = useState(false);
+
+    const sendForm = useForm({ email: '' });
 
     const payForm = useForm({
-        payment_method: 'cash',
+        payment_method: payment_methods[0]?.value || 'cash',
         amount: sale?.remaining?.toString() || '',
         reference: '',
         payment_date: new Date().toISOString().slice(0, 10),
@@ -49,6 +55,17 @@ export default function SalesShow({ project, sale, can }) {
     const openPayModal = () => {
         setShowPayModal(true);
         payForm.setData('amount', sale?.remaining?.toString() || '');
+    };
+
+    const handleSendInvoice = (e) => {
+        e.preventDefault();
+        sendForm.post(route('projects.modules.sales.invoice.send', [project.id, sale.id]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowSendModal(false);
+                sendForm.reset();
+            },
+        });
     };
 
     const selectClass = `mt-1 block w-full rounded-md border-gray-300 shadow-sm ${focusClass}`;
@@ -75,6 +92,18 @@ export default function SalesShow({ project, sale, can }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <a
+                            href={route('projects.modules.sales.invoice.pdf', [project.id, sale.id])}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+                        >
+                            <IconPrinter className="h-4 w-4" />
+                            Print Invoice
+                        </a>
+                        <SecondaryButton onClick={() => setShowSendModal(true)}>
+                            Send Invoice
+                        </SecondaryButton>
                         <span className={`inline-flex rounded-full px-3 py-1 text-sm font-medium capitalize ${paymentStatusColors[sale.payment_status] || 'bg-gray-100 text-gray-800'}`}>
                             {sale.payment_status}
                         </span>
@@ -170,6 +199,41 @@ export default function SalesShow({ project, sale, can }) {
                 </div>
             </div>
 
+            {/* Send Invoice Modal */}
+            {showSendModal && (
+                <Modal show onClose={() => setShowSendModal(false)} maxWidth="md">
+                    <form onSubmit={handleSendInvoice} className="p-6">
+                        <h3 className="text-lg font-medium text-gray-900">Send Invoice by Email</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Enter the customer email to send the invoice.
+                        </p>
+                        <div className="mt-4">
+                            <InputLabel value="Email" />
+                            <TextInput
+                                type="email"
+                                value={sendForm.data.email}
+                                onChange={(e) => sendForm.setData('email', e.target.value)}
+                                className={inputClass + ' block w-full'}
+                                placeholder="customer@example.com"
+                                required
+                            />
+                            <InputError message={sendForm.errors.email} className="mt-1" />
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500">
+                            SMTP must be configured in Project Settings to send emails.
+                        </p>
+                        <div className="mt-6 flex justify-end gap-2">
+                            <SecondaryButton type="button" onClick={() => setShowSendModal(false)}>
+                                Cancel
+                            </SecondaryButton>
+                            <PrimaryButton type="submit" disabled={sendForm.processing}>
+                                Send Invoice
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
             {/* Payment Modal */}
             {showPayModal && (
                 <Modal show onClose={() => setShowPayModal(false)} maxWidth="md">
@@ -201,11 +265,9 @@ export default function SalesShow({ project, sale, can }) {
                                     onChange={(e) => payForm.setData('payment_method', e.target.value)}
                                     className={selectClass + ' w-full'}
                                 >
-                                    <option value="cash">Cash</option>
-                                    <option value="card">Card</option>
-                                    <option value="transfer">Transfer</option>
-                                    <option value="check">Check</option>
-                                    <option value="other">Other</option>
+                                    {payment_methods.map((m) => (
+                                        <option key={m.value} value={m.value}>{m.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

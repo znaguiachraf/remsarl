@@ -20,8 +20,9 @@ import {
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function ExpensesIndex({ project, expenses, categories, suppliers, filters, can }) {
-    const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
+export default function ExpensesIndex({ project, expenses, categories, filters, can }) {
+    const { currentProject, payment_methods = [] } = usePage().props;
+    const primaryColor = currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingExpense, setEditingExpense] = useState(null);
@@ -29,7 +30,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
 
     const createForm = useForm({
         expense_category_id: '',
-        supplier_id: '',
         reference: '',
         description: '',
         amount: '',
@@ -38,7 +38,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
 
     const editForm = useForm({
         expense_category_id: '',
-        supplier_id: '',
         reference: '',
         description: '',
         amount: '',
@@ -69,7 +68,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
         setEditingExpense(expense);
         editForm.setData({
             expense_category_id: expense.expense_category?.id?.toString() || '',
-            supplier_id: expense.supplier?.id?.toString() || '',
             reference: expense.reference || '',
             description: expense.description,
             amount: expense.amount.toString(),
@@ -245,7 +243,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 <span className="inline-flex items-center gap-1.5"><IconFolder className="h-4 w-4" />Category</span>
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Supplier</th>
                             <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                                 <span className="inline-flex items-center gap-1.5 justify-end"><IconDollar className="h-4 w-4" />Amount</span>
                             </th>
@@ -278,19 +275,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
                                         >
                                             {expense.expense_category.name}
                                         </span>
-                                    ) : (
-                                        <span className="text-gray-400">—</span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {expense.supplier ? (
-                                        <Link
-                                            href={route('projects.modules.suppliers.show', [project.id, expense.supplier.id])}
-                                            className="font-medium hover:underline"
-                                            style={{ color: primaryColor }}
-                                        >
-                                            {expense.supplier.name}
-                                        </Link>
                                     ) : (
                                         <span className="text-gray-400">—</span>
                                     )}
@@ -417,19 +401,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
                                 </select>
                             </div>
                             <div>
-                                <InputLabel value="Supplier" />
-                                <select
-                                    value={createForm.data.supplier_id}
-                                    onChange={(e) => createForm.setData('supplier_id', e.target.value)}
-                                    className={selectClass}
-                                >
-                                    <option value="">—</option>
-                                    {suppliers?.map((s) => (
-                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
                                 <InputLabel value="Reference" />
                                 <TextInput
                                     value={createForm.data.reference}
@@ -505,19 +476,6 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
                                 </select>
                             </div>
                             <div>
-                                <InputLabel value="Supplier" />
-                                <select
-                                    value={editForm.data.supplier_id}
-                                    onChange={(e) => editForm.setData('supplier_id', e.target.value)}
-                                    className={selectClass}
-                                >
-                                    <option value="">—</option>
-                                    {suppliers?.map((s) => (
-                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
                                 <InputLabel value="Reference" />
                                 <TextInput
                                     value={editForm.data.reference}
@@ -567,11 +525,9 @@ export default function ExpensesIndex({ project, expenses, categories, suppliers
                                     className={selectClass}
                                     required
                                 >
-                                    <option value="cash">Cash</option>
-                                    <option value="card">Card</option>
-                                    <option value="transfer">Transfer</option>
-                                    <option value="check">Check</option>
-                                    <option value="other">Other</option>
+                                    {payment_methods.map((m) => (
+                                        <option key={m.value} value={m.value}>{m.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

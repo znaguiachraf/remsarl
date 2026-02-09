@@ -7,13 +7,14 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 
 export default function PosIndex({ project, session, products, categories = [], can }) {
-    const { currentProject, flash } = usePage().props;
+    const { currentProject, flash, payment_methods = [] } = usePage().props;
     const primaryColor = currentProject?.primary_color || '#3B82F6';
     const secondaryColor = currentProject?.secondary_color || '#10B981';
 
     const [cart, setCart] = useState([]);
     const [productSearch, setProductSearch] = useState('');
     const [discount, setDiscount] = useState('0');
+    const [discountType, setDiscountType] = useState('fixed'); // 'fixed' | 'percent'
     const [showCloseSessionModal, setShowCloseSessionModal] = useState(false);
     const [closingCash, setClosingCash] = useState('');
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -115,7 +116,10 @@ export default function PosIndex({ project, session, products, categories = [], 
         (sum, c) => sum + c.quantity * (c.unit_price || 0),
         0
     );
-    const discountVal = parseFloat(discount) || 0;
+    const discountInput = parseFloat(discount) || 0;
+    const discountVal = discountType === 'percent'
+        ? Math.min(subtotal, (subtotal * discountInput) / 100)
+        : Math.min(subtotal, discountInput);
     const total = Math.max(0, subtotal - discountVal);
     const paymentsTotal = payments.reduce(
         (sum, p) => sum + (parseFloat(p.amount) || 0),
@@ -143,8 +147,7 @@ export default function PosIndex({ project, session, products, categories = [], 
         setPayments((prev) => prev.filter((_, i) => i !== idx));
     };
 
-    const handleCompleteSale = (e) => {
-        e.preventDefault();
+    const doCompleteSale = () => {
         setErrors({});
 
         const validItems = cart
@@ -168,13 +171,6 @@ export default function PosIndex({ project, session, products, categories = [], 
                 reference: null,
             }));
 
-        if (validPayments.reduce((s, p) => s + p.amount, 0) < total) {
-            setErrors({
-                payments: `Total payments (${paymentsTotal.toFixed(2)}) must cover the total (${total.toFixed(2)}).`,
-            });
-            return;
-        }
-
         setSubmitting(true);
         router.post(route('projects.modules.pos.orders.store', project.id), {
             items: validItems,
@@ -186,9 +182,15 @@ export default function PosIndex({ project, session, products, categories = [], 
             onSuccess: () => {
                 clearCart();
                 setDiscount('0');
+                setDiscountType('fixed');
             },
             onError: (errs) => setErrors(errs),
         });
+    };
+
+    const handleCompleteSale = (e) => {
+        e?.preventDefault?.();
+        doCompleteSale();
     };
 
     const handleOpenSession = (e) => {
@@ -483,16 +485,37 @@ export default function PosIndex({ project, session, products, categories = [], 
                                     <span className="text-gray-600">Subtotal</span>
                                     <span>{subtotal.toFixed(2)}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <InputLabel className="text-xs">Discount</InputLabel>
-                                    <TextInput
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={discount}
-                                        onChange={(e) => setDiscount(e.target.value)}
-                                        className="w-24"
-                                    />
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <InputLabel className="text-xs shrink-0">Discount</InputLabel>
+                                    <div className="flex items-center gap-1">
+                                        <select
+                                            value={discountType}
+                                            onChange={(e) => {
+                                                setDiscountType(e.target.value);
+                                                setDiscount('0');
+                                            }}
+                                            className="rounded border border-gray-300 text-sm focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]"
+                                        >
+                                            <option value="fixed">Fixed</option>
+                                            <option value="percent">%</option>
+                                        </select>
+                                        <TextInput
+                                            type="number"
+                                            min="0"
+                                            step={discountType === 'percent' ? '1' : '0.01'}
+                                            max={discountType === 'percent' ? '100' : undefined}
+                                            value={discount}
+                                            onChange={(e) => setDiscount(e.target.value)}
+                                            className="w-20"
+                                            placeholder={discountType === 'percent' ? '%' : '0.00'}
+                                        />
+                                        {discountType === 'percent' && <span className="text-xs text-gray-500">%</span>}
+                                    </div>
+                                    {discountVal > 0 && (
+                                        <span className="text-xs text-gray-500">
+                                            ({discountVal.toFixed(2)} off)
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex justify-between border-t pt-2 font-semibold" style={{ borderColor: `${primaryColor}30` }}>
                                     <span style={{ color: primaryColor }}>Total</span>
@@ -619,11 +642,9 @@ export default function PosIndex({ project, session, products, categories = [], 
                                 onChange={(e) => setPaymentMethod(e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]"
                             >
-                                <option value="cash">Cash</option>
-                                <option value="card">Card</option>
-                                <option value="transfer">Transfer</option>
-                                <option value="check">Check</option>
-                                <option value="other">Other</option>
+                                {payment_methods.map((m) => (
+                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                ))}
                             </select>
                         </div>
                         <div>
@@ -642,7 +663,19 @@ export default function PosIndex({ project, session, products, categories = [], 
                             <InputError message={errors.payment} className="mt-1" />
                         </div>
                     </div>
-                    <div className="mt-6 flex justify-end gap-3">
+                    <div className="mt-6 flex flex-wrap justify-end gap-3">
+                        {remaining > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowPaymentModal(false);
+                                    handleCompleteSale();
+                                }}
+                                className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100"
+                            >
+                                Complete as Unpaid
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={() => setShowPaymentModal(false)}
