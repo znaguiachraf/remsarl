@@ -86,6 +86,11 @@ export default function Sidebar({
     const { url, props } = usePage();
     const projectId = currentProject?.id;
     const notificationCounts = props?.notificationCounts ?? {};
+    const sidebar = props?.sidebar ?? {};
+    const visibleModules = sidebar.visibleModules ?? [];
+    const canSeeNotes = sidebar.canSeeNotes ?? false;
+    const canSeeWorkers = sidebar.canSeeWorkers ?? false;
+    const canSeeRoles = sidebar.canSeeRoles ?? false;
 
     if (!projectId) return null;
 
@@ -167,7 +172,7 @@ export default function Sidebar({
                     Dashboard
                 </NavItem>
 
-                {enabledModules?.map((module) => (
+                {visibleModules.map((module) => (
                     <NavItem
                         key={module.key}
                         href={getModuleHref(projectId, module.key)}
@@ -184,38 +189,44 @@ export default function Sidebar({
 
                 <div className={`border-t border-white/10 ${isMobile ? 'my-3' : 'my-4'}`} />
 
-                <NavItem
-                    href={route('projects.notes.index', projectId)}
-                    active={isActive(`/projects/${projectId}/notes`)}
-                    icon="file-text"
-                    onNavigate={onNavigate}
-                    isMobile={isMobile}
-                    collapsed={isCollapsed}
-                >
-                    Employee Notes
-                </NavItem>
+                {canSeeNotes && (
+                    <NavItem
+                        href={route('projects.notes.index', projectId)}
+                        active={isActive(`/projects/${projectId}/notes`)}
+                        icon="file-text"
+                        onNavigate={onNavigate}
+                        isMobile={isMobile}
+                        collapsed={isCollapsed}
+                    >
+                        Employee Notes
+                    </NavItem>
+                )}
 
-                <NavItem
-                    href={route('projects.workers.index', projectId)}
-                    active={isActive(`/projects/${projectId}/workers`)}
-                    icon="users"
-                    onNavigate={onNavigate}
-                    isMobile={isMobile}
-                    collapsed={isCollapsed}
-                >
-                    Workers
-                </NavItem>
+                {canSeeWorkers && (
+                    <NavItem
+                        href={route('projects.workers.index', projectId)}
+                        active={isActive(`/projects/${projectId}/workers`)}
+                        icon="users"
+                        onNavigate={onNavigate}
+                        isMobile={isMobile}
+                        collapsed={isCollapsed}
+                    >
+                        Workers
+                    </NavItem>
+                )}
 
-                <NavItem
-                    href={route('projects.roles.index', projectId)}
-                    active={isActive(`/projects/${projectId}/roles`)}
-                    icon="shield"
-                    onNavigate={onNavigate}
-                    isMobile={isMobile}
-                    collapsed={isCollapsed}
-                >
-                    Roles & Permissions
-                </NavItem>
+                {canSeeRoles && (
+                    <NavItem
+                        href={route('projects.roles.index', projectId)}
+                        active={isActive(`/projects/${projectId}/roles`)}
+                        icon="shield"
+                        onNavigate={onNavigate}
+                        isMobile={isMobile}
+                        collapsed={isCollapsed}
+                    >
+                        Roles & Permissions
+                    </NavItem>
+                )}
 
                 {props?.currentProject?.can_update && (
                     <NavItem
