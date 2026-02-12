@@ -54,9 +54,10 @@ class InvoiceService
 
     /**
      * Generate PDF invoice for sale.
+     * When $showTva is false, the PDF displays totals without TVA (subtotal - discount).
      * Requires barryvdh/laravel-dompdf or similar. Returns raw PDF content.
      */
-    public function generatePdf(Sale $sale): string
+    public function generatePdf(Sale $sale, bool $showTva = true): string
     {
         $invoice = $sale->invoice ?? $this->createFromSale($sale);
         $sale->load(['saleItems.product', 'project']);
@@ -64,6 +65,7 @@ class InvoiceService
         $html = view('invoices.pdf', [
             'invoice' => $invoice,
             'sale' => $sale,
+            'showTva' => $showTva,
         ])->render();
 
         return $this->renderPdf($html);

@@ -1,4 +1,13 @@
 @php
+    $showTva = $showTva ?? true;
+    $hasTvaOnSale = ($invoice->include_tva ?? $sale->include_tva ?? false) && (($invoice->tva_amount ?? $sale->tax ?? 0) > 0);
+    $tvaRate = $invoice->tva_rate ?? $sale->tva_rate ?? 0;
+    $tvaAmount = $invoice->tva_amount ?? $sale->tax ?? 0;
+    $subtotal = $sale->subtotal ?? 0;
+    $discount = $sale->discount ?? 0;
+    $subtotalAfterDiscount = $subtotal - $discount;
+    $displayTotal = $showTva && $hasTvaOnSale ? ($invoice->total_amount ?? 0) : $subtotalAfterDiscount;
+    $invoiceTypeLabel = $showTva ? ($hasTvaOnSale ? 'TVA included (TTC)' : 'No TVA') : 'Without TVA (HT)';
     $logoDataUri = null;
     if ($sale->project?->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($sale->project->logo)) {
         $path = storage_path('app/public/' . $sale->project->logo);
@@ -37,6 +46,10 @@
         .total-row td { border-top: 2px solid var(--primary); }
         .text-right { text-align: right; }
         .mt-20 { margin-top: 20px; }
+        .invoice-type { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+        .invoice-type.tva-included { background: #d1fae8; color: #065f46; }
+        .invoice-type.no-tva { background: #e5e7eb; color: #4b5563; }
+        .invoice-type.without-tva { background: #fef3c7; color: #92400e; }
     </style>
 </head>
 <body>
@@ -48,18 +61,20 @@
 
     <div class="actions no-print">
         <button type="button" class="btn-print" onclick="window.print()">Print</button>
-        <a href="{{ route('projects.modules.sales.invoice.pdf', [$sale->project_id, $sale->id]) }}?download=1" class="btn-download" download>Download PDF</a>
+        <a href="{{ route('projects.modules.sales.invoice.pdf', [$sale->project_id, $sale->id]) }}?download=1&tva={{ $showTva ? '1' : '0' }}" class="btn-download" download>Download PDF</a>
     </div>
 
     <div class="header">
         <div>
             <h1>Invoice {{ $invoice->invoice_number }}</h1>
             <p>{{ $sale->project->name ?? config('app.name') }}</p>
-            <p>Sale: {{ $sale->sale_number }}</p>
-            @if($invoice->include_tva && ($invoice->tva_amount ?? 0) > 0)
-                <p style="color: var(--text-muted); font-size: 11px;">TVA included ({{ number_format($invoice->tva_rate ?? 0, 1) }}%)</p>
+            <p style="color: var(--text-muted);">Sale: {{ $sale->sale_number }}</p>
+            @if($showTva && $hasTvaOnSale)
+                <span class="invoice-type tva-included">TVA included — {{ number_format($tvaRate, 1) }}% (Total TTC)</span>
+            @elseif($showTva)
+                <span class="invoice-type no-tva">No TVA</span>
             @else
-                <p style="color: var(--text-muted); font-size: 11px;">No TVA</p>
+                <span class="invoice-type without-tva">Invoice without TVA (amounts HT)</span>
             @endif
         </div>
         <div class="meta">
@@ -89,26 +104,26 @@
         </tbody>
     </table>
 
-    <table class="mt-20" style="width: 300px; margin-left: auto;">
+    <table class="mt-20" style="width: 320px; margin-left: auto;">
         <tr>
-            <td>Subtotal</td>
-            <td class="text-right">{{ number_format($sale->subtotal ?? 0, 2) }}</td>
+            <td>{{ ($showTva && $hasTvaOnSale) ? 'Subtotal (HT)' : 'Subtotal' }}</td>
+            <td class="text-right">{{ number_format($subtotal, 2) }}</td>
         </tr>
-        @if(($sale->discount ?? 0) > 0)
+        @if($discount > 0)
         <tr>
             <td>Discount</td>
-            <td class="text-right">-{{ number_format($sale->discount, 2) }}</td>
+            <td class="text-right">-{{ number_format($discount, 2) }}</td>
         </tr>
         @endif
-        @if(($invoice->include_tva ?? $sale->include_tva ?? false) && (($invoice->tva_amount ?? $sale->tax ?? 0) > 0))
+        @if($showTva && $hasTvaOnSale)
         <tr>
-            <td>TVA ({{ number_format($invoice->tva_rate ?? $sale->tva_rate ?? 0, 1) }}%)</td>
-            <td class="text-right">{{ number_format($invoice->tva_amount ?? $sale->tax ?? 0, 2) }}</td>
+            <td>TVA ({{ number_format($tvaRate, 1) }}%)</td>
+            <td class="text-right">{{ number_format($tvaAmount, 2) }}</td>
         </tr>
         @endif
         <tr class="total-row">
-            <td>{{ ($invoice->include_tva ?? $sale->include_tva ?? false) ? 'Total (TTC)' : 'Total' }}</td>
-            <td class="text-right">{{ number_format($invoice->total_amount, 2) }}</td>
+            <td>{{ $showTva && $hasTvaOnSale ? 'Total (TTC)' : 'Total' }}{{ !$showTva ? ' (HT)' : '' }}</td>
+            <td class="text-right">{{ number_format($displayTotal, 2) }}</td>
         </tr>
     </table>
 </body>
