@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'currentProject' => $project ? $this->projectToArray($project, $request) : null,
             'enabledModules' => $project ? $this->getEnabledModules($project) : [],
             'userRole' => $project && $request->user() ? $this->getUserRole($project, $request->user()) : null,
+            'sidebar' => $project && $request->user() ? $this->getSidebarVisibility($project, $request->user()) : null,
             'userProjects' => $request->user() ? $this->getUserProjects($request->user()) : [],
             'notificationCounts' => $project ? $this->getNotificationCounts($project) : [],
             'payment_methods' => array_map(fn ($v) => ['value' => $v, 'label' => PaymentMethod::from($v)->label()], PaymentMethod::values()),
@@ -132,7 +133,75 @@ class HandleInertiaRequests extends Middleware
             'id' => $role->id,
             'name' => $role->name,
             'slug' => $role->slug,
+            'permissions' => $role->permissions()->pluck('slug')->values()->toArray(),
         ] : null;
+    }
+
+    /**
+     * Module key => permission slugs (user needs any one to see the module).
+     * Single source of truth for sidebar visibility; add new modules/permissions here.
+     */
+    protected function getModulePermissionSlugs(): array
+    {
+        return [
+            'hr' => ['worker.view'],
+            'tasks' => ['task.view', 'tasks.access'],
+            'suppliers' => ['supplier.view'],
+            'products' => ['product.view'],
+            'sales' => ['sale.view'],
+            'stock' => ['stock.view'],
+            'pos' => ['pos.access'],
+            'payments' => ['payment.view'],
+            'expenses' => ['expense.view'],
+            'purchase' => ['purchase.view'],
+            'logs' => ['log.view'],
+            // analytics: no permission required (any project member with module enabled can see)
+        ];
+    }
+
+    /**
+     * Sidebar visibility computed from the user's role permissions.
+     * Platform admins see everything; others see only what their role allows.
+     */
+    protected function getSidebarVisibility(Project $project, $user): array
+    {
+        $isAdmin = $user->isAdmin();
+        $enabledModules = $this->getEnabledModules($project);
+        $modulePermissionSlugs = $this->getModulePermissionSlugs();
+        $userPermissionSlugs = [];
+
+        if (!$isAdmin) {
+            $role = $user->roleOnProject($project);
+            if ($role) {
+                $userPermissionSlugs = $role->permissions()->pluck('slug')->values()->all();
+            }
+        }
+
+        $hasPermission = function (string $slug) use ($isAdmin, $userPermissionSlugs): bool {
+            return $isAdmin || in_array($slug, $userPermissionSlugs, true);
+        };
+
+        $visibleModules = [];
+        foreach ($enabledModules as $module) {
+            $required = $modulePermissionSlugs[$module['key']] ?? null;
+            if ($required === null) {
+                $visibleModules[] = $module;
+                continue;
+            }
+            foreach ($required as $slug) {
+                if ($hasPermission($slug)) {
+                    $visibleModules[] = $module;
+                    break;
+                }
+            }
+        }
+
+        return [
+            'visibleModules' => $visibleModules,
+            'canSeeNotes' => $hasPermission('worker.view'),
+            'canSeeWorkers' => $hasPermission('worker.view'),
+            'canSeeRoles' => $hasPermission('projects.manage-members'),
+        ];
     }
 
     protected function getUserProjects($user): array
