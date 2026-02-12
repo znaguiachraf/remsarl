@@ -160,8 +160,14 @@ export default function SalesShow({ project, sale, can }) {
                                 <dt className="text-gray-600">Discount</dt>
                                 <dd>-{Number(sale.discount).toLocaleString()}</dd>
                             </div>
+                            {sale.include_tva && Number(sale.tax) > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <dt className="text-gray-600">TVA ({(sale.tva_rate || 0).toLocaleString()}%)</dt>
+                                    <dd>{Number(sale.tax).toLocaleString()}</dd>
+                                </div>
+                            )}
                             <div className="flex justify-between border-t border-gray-200 pt-2 font-medium">
-                                <dt>Total</dt>
+                                <dt>{sale.include_tva ? 'Total (TTC)' : 'Total'}</dt>
                                 <dd><IconDollar className="inline h-4 w-4 text-gray-400" /> {Number(sale.total).toLocaleString()}</dd>
                             </div>
                             <div className="flex justify-between text-sm text-emerald-600">

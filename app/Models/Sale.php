@@ -24,6 +24,8 @@ class Sale extends Model
         'total',
         'user_id',
         'source',
+        'include_tva',
+        'tva_rate',
     ];
 
     protected $casts = [
@@ -31,6 +33,8 @@ class Sale extends Model
         'discount' => 'decimal:2',
         'tax' => 'decimal:2',
         'total' => 'decimal:2',
+        'include_tva' => 'boolean',
+        'tva_rate' => 'decimal:2',
     ];
 
     public function user(): BelongsTo

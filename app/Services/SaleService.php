@@ -65,8 +65,14 @@ class SaleService
         return DB::transaction(function () use ($project, $saleData, $items, $payments) {
             $subtotal = $saleData['subtotal'] ?? 0;
             $discount = (float) ($saleData['discount'] ?? 0);
-            $tax = (float) ($saleData['tax'] ?? 0);
-            $total = $saleData['total'] ?? ($subtotal - $discount + $tax);
+            $includeTva = (bool) ($saleData['include_tva'] ?? false);
+            $tvaRate = (float) ($saleData['tva_rate'] ?? 20);
+
+            $tax = 0;
+            if ($includeTva && $tvaRate > 0) {
+                $tax = round(($subtotal - $discount) * ($tvaRate / 100), 2);
+            }
+            $total = $subtotal - $discount + $tax;
 
             $sale = Sale::create([
                 'project_id' => $project->id,
@@ -78,6 +84,8 @@ class SaleService
                 'total' => $total,
                 'user_id' => auth()->id(),
                 'source' => $saleData['source'] ?? 'manual',
+                'include_tva' => $includeTva,
+                'tva_rate' => $tvaRate,
             ]);
 
             if (!empty($items)) {

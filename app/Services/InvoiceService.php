@@ -27,6 +27,9 @@ class InvoiceService
                 'total_amount' => $sale->total,
                 'status' => 'draft',
                 'customer_email' => null,
+                'include_tva' => (bool) $sale->include_tva,
+                'tva_rate' => $sale->include_tva ? $sale->tva_rate : null,
+                'tva_amount' => (float) ($sale->tax ?? 0),
             ]);
 
             return $invoice;

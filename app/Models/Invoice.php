@@ -17,10 +17,16 @@ class Invoice extends Model
         'total_amount',
         'status',
         'customer_email',
+        'include_tva',
+        'tva_rate',
+        'tva_amount',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'include_tva' => 'boolean',
+        'tva_rate' => 'decimal:2',
+        'tva_amount' => 'decimal:2',
     ];
 
     public function sale(): BelongsTo

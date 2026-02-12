@@ -56,6 +56,11 @@
             <h1>Invoice {{ $invoice->invoice_number }}</h1>
             <p>{{ $sale->project->name ?? config('app.name') }}</p>
             <p>Sale: {{ $sale->sale_number }}</p>
+            @if($invoice->include_tva && ($invoice->tva_amount ?? 0) > 0)
+                <p style="color: var(--text-muted); font-size: 11px;">TVA included ({{ number_format($invoice->tva_rate ?? 0, 1) }}%)</p>
+            @else
+                <p style="color: var(--text-muted); font-size: 11px;">No TVA</p>
+            @endif
         </div>
         <div class="meta">
             <p>Date: {{ $invoice->created_at->format('Y-m-d') }}</p>
@@ -95,14 +100,14 @@
             <td class="text-right">-{{ number_format($sale->discount, 2) }}</td>
         </tr>
         @endif
-        @if(($sale->tax ?? 0) > 0)
+        @if(($invoice->include_tva ?? $sale->include_tva ?? false) && (($invoice->tva_amount ?? $sale->tax ?? 0) > 0))
         <tr>
-            <td>Tax</td>
-            <td class="text-right">{{ number_format($sale->tax, 2) }}</td>
+            <td>TVA ({{ number_format($invoice->tva_rate ?? $sale->tva_rate ?? 0, 1) }}%)</td>
+            <td class="text-right">{{ number_format($invoice->tva_amount ?? $sale->tax ?? 0, 2) }}</td>
         </tr>
         @endif
         <tr class="total-row">
-            <td>Total</td>
+            <td>{{ ($invoice->include_tva ?? $sale->include_tva ?? false) ? 'Total (TTC)' : 'Total' }}</td>
             <td class="text-right">{{ number_format($invoice->total_amount, 2) }}</td>
         </tr>
     </table>
