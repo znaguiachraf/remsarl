@@ -1,4 +1,11 @@
 import ProjectLayout from '@/Layouts/ProjectLayout';
+import {
+    IconDollar,
+    IconFolder,
+    IconShoppingBag,
+    IconUsers,
+    IconCreditCard,
+} from '@/Components/expense/Icons';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     BarChart,
@@ -28,6 +35,7 @@ export default function AnalyticsIndex({
     salesByHour,
     salesByDay,
     filters = {},
+    netIncomeSummary,
 }) {
     const primaryColor = project?.primary_color || '#3B82F6';
     const secondaryColor = project?.secondary_color || '#10B981';
@@ -86,9 +94,62 @@ export default function AnalyticsIndex({
                     </select>
                 </div>
 
+                {/* Net income summary (payment calculations with expense deductions) */}
+                {netIncomeSummary && (
+                    <div
+                        className="rounded-xl border p-4 shadow-sm"
+                        style={{ borderColor: `${primaryColor}40`, backgroundColor: `${primaryColor}08` }}
+                    >
+                        <h3 className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                            <IconCreditCard className="h-4 w-4" style={{ color: primaryColor }} />
+                            Net income summary (filtered period)
+                        </h3>
+                        <div className="mt-3 flex flex-wrap gap-6">
+                            <div className="flex items-start gap-2">
+                                <IconShoppingBag className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                                <div>
+                                    <span className="text-xs text-gray-500">Revenue</span>
+                                    <p className="text-lg font-semibold text-gray-900">{formatValue(netIncomeSummary.revenue)}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <IconDollar className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                                <div>
+                                    <span className="text-xs text-gray-500">Expenses</span>
+                                    <p className="text-lg font-semibold text-red-600">-{formatValue(netIncomeSummary.total_expenses)}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <IconDollar className="mt-0.5 h-5 w-5 shrink-0" style={{ color: primaryColor }} />
+                                <div>
+                                    <span className="text-xs text-gray-500">Net income</span>
+                                    <p className="text-lg font-semibold" style={{ color: primaryColor }}>{formatValue(netIncomeSummary.net_income)}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <IconUsers className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                                <div>
+                                    <span className="text-xs text-gray-500">Salary payments</span>
+                                    <p className="text-lg font-semibold text-amber-600">-{formatValue(netIncomeSummary.salary_payments)}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <IconCreditCard className="mt-0.5 h-5 w-5 shrink-0 text-gray-600" />
+                                <div>
+                                    <span className="text-xs text-gray-500">Net after compensation</span>
+                                    <p className="text-lg font-semibold text-gray-900">{formatValue(netIncomeSummary.net_after_compensation)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Sales vs Expenses */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <h3 className="mb-4 text-lg font-medium text-gray-900">Sales vs Expenses</h3>
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+                        <IconShoppingBag className="h-5 w-5" style={{ color: primaryColor }} />
+                        Sales vs Expenses
+                    </h3>
                     <div className="h-72">
                         {salesVsExpensesChartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -121,7 +182,10 @@ export default function AnalyticsIndex({
                 <div className="grid gap-6 lg:grid-cols-2">
                     {/* Expenses by Category - Pie Chart */}
                     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 text-lg font-medium text-gray-900">Expenses by Category</h3>
+                        <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+                            <IconFolder className="h-5 w-5" style={{ color: secondaryColor }} />
+                            Expenses by Category
+                        </h3>
                         {expensesByCategory?.length > 0 ? (
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -153,7 +217,10 @@ export default function AnalyticsIndex({
 
                     {/* Sales by Hour */}
                     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 text-lg font-medium text-gray-900">Sales by Hour</h3>
+                        <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+                            <IconDollar className="h-5 w-5" style={{ color: primaryColor }} />
+                            Sales by Hour
+                        </h3>
                         {salesByHour?.some((r) => r.count > 0) ? (
                             <>
                                 {peakHour && peakHour.revenue > 0 && (
@@ -181,7 +248,10 @@ export default function AnalyticsIndex({
 
                 {/* Top Products Datatable with Date Filter */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm overflow-hidden">
-                    <h3 className="mb-4 text-lg font-medium text-gray-900">Top Products Selling</h3>
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+                        <IconShoppingBag className="h-5 w-5" style={{ color: primaryColor }} />
+                        Top Products Selling
+                    </h3>
                     <div className="mb-4 flex flex-wrap items-center gap-3">
                         <label className="text-sm font-medium text-gray-700">From:</label>
                         <input

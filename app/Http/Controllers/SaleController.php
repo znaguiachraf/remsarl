@@ -68,11 +68,14 @@ class SaleController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'price', 'unit']);
 
+        $defaultTvaRate = (float) (data_get($project->config, 'sales.default_tva_rate', 20));
+
         return Inertia::render('Sales/Create', [
             'project' => [
                 'id' => $project->id,
                 'name' => $project->name,
             ],
+            'default_tva_rate' => $defaultTvaRate,
             'products' => $products->map(fn ($p) => [
                 'id' => $p->id,
                 'name' => $p->name,
@@ -93,6 +96,8 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
+            'include_tva' => 'nullable|boolean',
+            'tva_rate' => 'nullable|numeric|min:0|max:100',
             'payments' => 'nullable|array',
             'payments.*.payment_method' => 'required|string|' . PaymentMethod::validationRule(),
             'payments.*.amount' => 'required|numeric|min:0.01',
@@ -103,7 +108,8 @@ class SaleController extends Controller
         $items = $validated['items'];
         $subtotal = collect($items)->sum(fn ($i) => $i['quantity'] * $i['unit_price']);
         $discount = (float) ($validated['discount'] ?? 0);
-        $total = $subtotal - $discount;
+        $includeTva = (bool) ($validated['include_tva'] ?? false);
+        $tvaRate = (float) ($validated['tva_rate'] ?? 20);
 
         $payments = array_map(fn ($p) => [
             'payment_method' => $p['payment_method'],
@@ -117,8 +123,8 @@ class SaleController extends Controller
         $sale = $this->saleService->create($project, [
             'subtotal' => $subtotal,
             'discount' => $discount,
-            'tax' => 0,
-            'total' => $total,
+            'include_tva' => $includeTva,
+            'tva_rate' => $tvaRate,
             'source' => 'manual',
         ], $items, $payments);
 
@@ -181,6 +187,8 @@ class SaleController extends Controller
             'discount' => (float) $s->discount,
             'tax' => (float) $s->tax,
             'total' => (float) $s->total,
+            'include_tva' => (bool) ($s->include_tva ?? false),
+            'tva_rate' => (float) ($s->tva_rate ?? 0),
             'total_paid' => (float) $s->total_paid,
             'remaining' => max(0, (float) $s->total - (float) $s->total_paid),
             'created_at' => $s->created_at->toISOString(),
@@ -200,6 +208,8 @@ class SaleController extends Controller
             'discount' => (float) $s->discount,
             'tax' => (float) $s->tax,
             'total' => (float) $s->total,
+            'include_tva' => (bool) ($s->include_tva ?? false),
+            'tva_rate' => (float) ($s->tva_rate ?? 0),
             'total_paid' => (float) $s->total_paid,
             'remaining' => max(0, (float) $s->total - (float) $s->total_paid),
             'created_at' => $s->created_at->toISOString(),
@@ -217,6 +227,9 @@ class SaleController extends Controller
                 'invoice_number' => $s->invoice->invoice_number,
                 'total_amount' => (float) $s->invoice->total_amount,
                 'status' => $s->invoice->status,
+                'include_tva' => (bool) ($s->invoice->include_tva ?? false),
+                'tva_rate' => $s->invoice->tva_rate !== null ? (float) $s->invoice->tva_rate : null,
+                'tva_amount' => (float) ($s->invoice->tva_amount ?? 0),
             ] : null,
             'payments' => $s->payments->map(fn ($p) => [
                 'id' => $p->id,

@@ -124,9 +124,12 @@ class PaymentController extends Controller
     protected function formatPayment(Payment $p, $user): array
     {
         $payable = $p->payable;
-        $payableLabel = $payable instanceof \App\Models\Sale
-            ? ('Sale #' . $payable->sale_number)
-            : ($payable ? 'Salary #' . $p->payable_id : ('Sale #' . $p->sale_id));
+        $payableLabel = match (true) {
+            $payable instanceof \App\Models\Sale => 'Sale #' . $payable->sale_number,
+            $payable instanceof \App\Models\Expense => 'Expense #' . $payable->id . ($payable->description ? ' — ' . \Illuminate\Support\Str::limit($payable->description, 30) : ''),
+            $payable instanceof \App\Models\Salary => 'Salary #' . $p->payable_id,
+            default => $p->sale_id ? ('Sale #' . $p->sale_id) : ('Payment #' . $p->id),
+        };
 
         return [
             'id' => $p->id,

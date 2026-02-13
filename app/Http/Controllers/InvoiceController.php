@@ -28,13 +28,15 @@ class InvoiceController extends Controller
 
     /**
      * Generate and download PDF invoice for sale.
+     * Query: tva=1 (with TVA, default) or tva=0 (without TVA).
      */
     public function pdf(Project $project, Sale $sale, Request $request)
     {
         $this->authorize('view', $sale);
         $this->ensureSaleBelongsToProject($project, $sale);
 
-        $pdf = $this->invoiceService->generatePdf($sale);
+        $showTva = $request->boolean('tva', true);
+        $pdf = $this->invoiceService->generatePdf($sale, $showTva);
         $invoice = $sale->invoice;
         $isPdf = class_exists(\Barryvdh\DomPDF\Facade\Pdf::class);
         $ext = $isPdf ? 'pdf' : 'html';

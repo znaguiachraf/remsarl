@@ -1,4 +1,7 @@
 import ProjectLayout from '@/Layouts/ProjectLayout';
+import Modal from '@/Components/Modal';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import {
     IconCalendar,
     IconDollar,
@@ -8,6 +11,7 @@ import {
     IconTag,
 } from '@/Components/expense/Icons';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 const paymentStatusColors = {
     unpaid: 'bg-red-100 text-red-800',
@@ -20,6 +24,16 @@ const paymentStatusColors = {
 export default function SalesIndex({ project, sales, filters, can }) {
     const primaryColor = usePage().props.currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
+    const [printModalSaleId, setPrintModalSaleId] = useState(null);
+
+    const openPrintModal = (saleId) => () => setPrintModalSaleId(saleId);
+    const closePrintModal = () => setPrintModalSaleId(null);
+    const openInvoicePdf = (saleId, withTva) => {
+        const url = route('projects.modules.sales.invoice.pdf', [project.id, saleId]) + '?tva=' + (withTva ? '1' : '0');
+        window.open(url, '_blank', 'noopener,noreferrer');
+        closePrintModal();
+    };
+
     const applyFilters = (newFilters) => {
         router.get(route('projects.modules.sales.index', project.id), newFilters, {
             preserveState: true,
@@ -143,16 +157,15 @@ export default function SalesIndex({ project, sales, filters, can }) {
                                 </td>
                                 <td className="px-4 py-4 sm:px-6 whitespace-nowrap text-right bg-white sticky right-0 shrink-0 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.05)] min-w-[100px]">
                                     <div className="flex items-center justify-end gap-1">
-                                        <Link
-                                            href={route('projects.modules.sales.invoice.pdf', [project.id, s.id])}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                        <button
+                                            type="button"
+                                            onClick={openPrintModal(s.id)}
                                             className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-sm font-medium text-gray-600 transition hover:text-gray-900 shrink-0"
                                             title="Print invoice"
                                         >
                                             <IconPrinter className="h-4 w-4" />
                                             <span className="hidden sm:inline sm:ml-0.5">Print</span>
-                                        </Link>
+                                        </button>
                                         <Link
                                             href={route('projects.modules.sales.show', [project.id, s.id])}
                                             className="inline-flex items-center p-1.5 sm:px-0 sm:py-0 text-sm font-medium transition hover:opacity-80 shrink-0"
@@ -187,6 +200,32 @@ export default function SalesIndex({ project, sales, filters, can }) {
                     </div>
                 )}
             </div>
+
+            {/* Invoice type modal (Print: with or without TVA) */}
+            <Modal show={printModalSaleId != null} onClose={closePrintModal} maxWidth="sm">
+                <div className="p-6">
+                    <h3 className="text-lg font-medium text-gray-900">Print invoice</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Choose how the invoice should be displayed.
+                    </p>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <PrimaryButton
+                            type="button"
+                            onClick={() => openInvoicePdf(printModalSaleId, true)}
+                            className="w-full sm:w-auto"
+                        >
+                            Invoice with TVA
+                        </PrimaryButton>
+                        <SecondaryButton
+                            type="button"
+                            onClick={() => openInvoicePdf(printModalSaleId, false)}
+                            className="w-full sm:w-auto"
+                        >
+                            Invoice without TVA
+                        </SecondaryButton>
+                    </div>
+                </div>
+            </Modal>
 
             {sales?.meta?.last_page > 1 && (
                 <div className="mt-4 flex items-center justify-between">

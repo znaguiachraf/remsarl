@@ -13,9 +13,12 @@ import {
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
-export default function SalesCreate({ project, products }) {
+const DEFAULT_TVA_RATE = 20;
+
+export default function SalesCreate({ project, products, default_tva_rate }) {
     const { currentProject, payment_methods = [] } = usePage().props;
     const primaryColor = currentProject?.primary_color || '#3B82F6';
+    const initialTvaRate = default_tva_rate != null ? Number(default_tva_rate) : DEFAULT_TVA_RATE;
 
     const [lineItems, setLineItems] = useState([{ product_id: '', quantity: 1, unit_price: '' }]);
     const [payments, setPayments] = useState([]);
@@ -23,6 +26,8 @@ export default function SalesCreate({ project, products }) {
     const [openDropdown, setOpenDropdown] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [includeTva, setIncludeTva] = useState(false);
+    const [tvaRate, setTvaRate] = useState(initialTvaRate.toString());
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -87,7 +92,10 @@ export default function SalesCreate({ project, products }) {
         return sum + (line.quantity || 0) * price;
     }, 0);
     const discount = parseFloat(formData.discount) || 0;
-    const total = subtotal - discount;
+    const tvaRateNum = parseFloat(tvaRate) || 0;
+    const subtotalAfterDiscount = Math.max(0, subtotal - discount);
+    const tvaAmount = includeTva && tvaRateNum > 0 ? Math.round(subtotalAfterDiscount * (tvaRateNum / 100) * 100) / 100 : 0;
+    const total = subtotal - discount + tvaAmount;
     const paymentsTotal = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
     const handleSubmit = (e) => {
@@ -124,6 +132,8 @@ export default function SalesCreate({ project, products }) {
         router.post(route('projects.modules.sales.store', project.id), {
             items: validItems,
             discount: discount.toString(),
+            include_tva: includeTva,
+            tva_rate: tvaRateNum,
             payments: validPayments,
         }, {
             preserveScroll: true,
@@ -257,7 +267,7 @@ export default function SalesCreate({ project, products }) {
                     }}
                 >
                     <h3 className="text-base font-medium text-gray-900">Totals</h3>
-                    <div className="mt-4 grid max-w-xs gap-2">
+                    <div className="mt-4 grid max-w-sm gap-3">
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Subtotal</span>
                             <span>{subtotal.toLocaleString()}</span>
@@ -273,15 +283,52 @@ export default function SalesCreate({ project, products }) {
                                 className="block w-24"
                             />
                         </div>
+                        <div className="flex flex-wrap items-center gap-4 border-t pt-3" style={{ borderColor: `${primaryColor}30` }}>
+                            <label className="flex cursor-pointer items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={includeTva}
+                                    onChange={(e) => setIncludeTva(e.target.checked)}
+                                    className="rounded border-gray-300"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Include TVA (VAT)</span>
+                            </label>
+                            {includeTva && (
+                                <div className="flex items-center gap-2">
+                                    <InputLabel value="TVA rate" />
+                                    <TextInput
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        max="100"
+                                        value={tvaRate}
+                                        onChange={(e) => setTvaRate(e.target.value)}
+                                        className="block w-20"
+                                    />
+                                    <span className="text-sm text-gray-500">%</span>
+                                </div>
+                            )}
+                        </div>
+                        {includeTva && tvaAmount > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">TVA ({tvaRateNum}%)</span>
+                                <span>{tvaAmount.toLocaleString()}</span>
+                            </div>
+                        )}
                         <div
                             className="flex justify-between border-t pt-2 font-medium"
                             style={{ borderColor: `${primaryColor}40` }}
                         >
-                            <span style={{ color: primaryColor }}>Total</span>
+                            <span style={{ color: primaryColor }}>{includeTva ? 'Total (TTC)' : 'Total'}</span>
                             <span className="text-lg" style={{ color: primaryColor }}>
                                 <IconDollar className="inline h-4 w-4" /> {total.toLocaleString()}
                             </span>
                         </div>
+                        {includeTva && (
+                            <p className="text-xs text-gray-500">
+                                TTC = All taxes included. Invoice will show TVA included.
+                            </p>
+                        )}
                     </div>
                 </div>
 

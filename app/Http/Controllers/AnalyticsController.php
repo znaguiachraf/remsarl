@@ -30,6 +30,7 @@ class AnalyticsController extends Controller
         $topProducts = $this->analyticsService->topProducts($project, 50, 'revenue', $fromDate, $toDate);
         $salesByHour = $this->analyticsService->salesTimeAnalysis($project, 'hour');
         $salesByDay = $this->analyticsService->salesTimeAnalysis($project, 'day');
+        $netIncomeSummary = $this->analyticsService->netIncomeSummary($project, $fromDate, $toDate);
 
         return Inertia::render('Analytics/Index', [
             'project' => [
@@ -50,6 +51,7 @@ class AnalyticsController extends Controller
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
             ],
+            'netIncomeSummary' => $netIncomeSummary,
         ]);
     }
 }
