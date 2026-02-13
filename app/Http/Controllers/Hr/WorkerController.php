@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Worker;
 use App\Services\SalaryService;
+use App\Services\VacationService;
 use App\Services\WorkerService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +16,8 @@ class WorkerController extends Controller
 {
     public function __construct(
         protected WorkerService $workerService,
-        protected SalaryService $salaryService
+        protected SalaryService $salaryService,
+        protected VacationService $vacationService
     ) {}
 
     public function index(Project $project, Request $request): Response
@@ -45,6 +47,7 @@ class WorkerController extends Controller
                     'employee_number' => $w->employee_number,
                     'cnss_number' => $w->cnss_number,
                     'hire_date' => $w->hire_date?->format('Y-m-d'),
+                    'vacation_days_per_year' => $w->vacation_days_per_year !== null ? (int) $w->vacation_days_per_year : null,
                     'active_contract' => $w->activeContract ? [
                         'id' => $w->activeContract->id,
                         'type' => $w->activeContract->type->value,
@@ -105,11 +108,13 @@ class WorkerController extends Controller
             'contracts' => fn ($q) => $q->orderByDesc('start_date'),
             'cnssRecords',
             'salaries' => fn ($q) => $q->orderByDesc('year')->orderByDesc('month')->limit(12),
-            'vacations' => fn ($q) => $q->orderByDesc('start_date')->limit(10),
+            'vacations' => fn ($q) => $q->orderByDesc('start_date')->limit(100),
             'employeeNotes' => fn ($q) => $q->with('author')->latest()->limit(50),
         ]);
 
         $user = $request->user();
+        $currentYear = (int) date('Y');
+        $vacationBalance = $this->vacationService->getBalanceForWorker($worker, $currentYear);
 
         return Inertia::render('Hr/Workers/Show', [
             'project' => [
@@ -128,6 +133,13 @@ class WorkerController extends Controller
                 'hire_date' => $worker->hire_date?->format('Y-m-d'),
                 'employee_number' => $worker->employee_number,
                 'cnss_number' => $worker->cnss_number,
+                'vacation_days_per_year' => $worker->vacation_days_per_year !== null ? (int) $worker->vacation_days_per_year : null,
+                'vacation_balance' => [
+                    'allocated' => $vacationBalance['allocated'],
+                    'used' => $vacationBalance['used'],
+                    'remaining' => $vacationBalance['remaining'],
+                    'year' => $vacationBalance['year'],
+                ],
                 'user' => $worker->user ? ['id' => $worker->user->id, 'name' => $worker->user->name] : null,
                 'contracts' => $worker->contracts->map(fn ($c) => [
                     'id' => $c->id,
@@ -206,6 +218,7 @@ class WorkerController extends Controller
             'hire_date' => 'nullable|date',
             'employee_number' => 'nullable|string|max:50',
             'cnss_number' => 'nullable|string|max:100',
+            'vacation_days_per_year' => 'nullable|integer|min:0|max:365',
         ]);
 
         $this->workerService->update($worker, $validated);

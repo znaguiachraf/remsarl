@@ -163,6 +163,7 @@ class WorkerService
                 'hire_date' => $data['hire_date'] ?? $worker->hire_date,
                 'employee_number' => $data['employee_number'] ?? $worker->employee_number,
                 'cnss_number' => $data['cnss_number'] ?? $worker->cnss_number,
+                'vacation_days_per_year' => array_key_exists('vacation_days_per_year', $data) ? $data['vacation_days_per_year'] : $worker->vacation_days_per_year,
             ]);
 
             $user = User::find($userId);
