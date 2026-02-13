@@ -16,11 +16,13 @@ import {
     IconPlus,
     IconArrowLeft,
     IconDocument,
+    IconUsers,
+    IconShoppingBag,
 } from '@/Components/expense/Icons';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function ExpensesIndex({ project, expenses, categories, filters, can }) {
+export default function ExpensesIndex({ project, expenses, categories, filters, can, expense_report, net_income_summary }) {
     const { currentProject, payment_methods = [] } = usePage().props;
     const primaryColor = currentProject?.primary_color || '#3B82F6';
     const focusClass = 'focus:border-[var(--project-primary)] focus:ring-[var(--project-primary)]';
@@ -229,6 +231,95 @@ export default function ExpensesIndex({ project, expenses, categories, filters, 
                     </>
                 )}
             </div>
+
+            {/* Expense report & net income summary */}
+            {(expense_report || net_income_summary) && (
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {expense_report && (
+                        <>
+                            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                                <h3 className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                                    <IconDollar className="h-4 w-4 text-amber-600" />
+                                    Total expenses (filtered period)
+                                </h3>
+                                <p className="mt-1 text-2xl font-semibold text-gray-900">
+                                    {Number(expense_report.total_expenses ?? 0).toLocaleString()}
+                                </p>
+                                {expense_report.by_period?.length > 0 && (
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        {expense_report.by_period.length} month(s)
+                                    </p>
+                                )}
+                            </div>
+                            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                                <h3 className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                                    <IconFolder className="h-4 w-4" style={{ color: primaryColor }} />
+                                    By category
+                                </h3>
+                                <ul className="mt-2 space-y-1">
+                                    {(expense_report.by_category ?? []).slice(0, 5).map((cat, i) => (
+                                        <li key={i} className="flex justify-between text-sm">
+                                            <span className="text-gray-700">{cat.name}</span>
+                                            <span className="font-medium">{Number(cat.value).toLocaleString()}</span>
+                                        </li>
+                                    ))}
+                                    {(!expense_report.by_category || expense_report.by_category.length === 0) && (
+                                        <li className="text-sm text-gray-500">No categories</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </>
+                    )}
+                    {net_income_summary && (
+                        <div
+                            className="rounded-xl border p-4 shadow-sm sm:col-span-2 lg:col-span-1"
+                            style={{ borderColor: `${primaryColor}40`, backgroundColor: `${primaryColor}08` }}
+                        >
+                            <h3 className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                                <IconCreditCard className="h-4 w-4" style={{ color: primaryColor }} />
+                                Payment summary (filtered period)
+                            </h3>
+                            <dl className="mt-2 space-y-1 text-sm">
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="flex items-center gap-1.5 text-gray-600">
+                                        <IconShoppingBag className="h-4 w-4 text-emerald-600 shrink-0" />
+                                        Revenue
+                                    </dt>
+                                    <dd className="font-medium">{Number(net_income_summary.revenue ?? 0).toLocaleString()}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="flex items-center gap-1.5 text-gray-600">
+                                        <IconDollar className="h-4 w-4 text-amber-600 shrink-0" />
+                                        Expenses
+                                    </dt>
+                                    <dd className="font-medium">-{Number(net_income_summary.total_expenses ?? 0).toLocaleString()}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 border-t border-gray-200 pt-2 font-medium" style={{ color: primaryColor }}>
+                                    <dt className="flex items-center gap-1.5">
+                                        <IconDollar className="h-4 w-4 shrink-0" />
+                                        Net income
+                                    </dt>
+                                    <dd>{Number(net_income_summary.net_income ?? 0).toLocaleString()}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                                    <dt className="flex items-center gap-1.5">
+                                        <IconUsers className="h-4 w-4 shrink-0" />
+                                        Salary payments
+                                    </dt>
+                                    <dd>-{Number(net_income_summary.salary_payments ?? 0).toLocaleString()}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 border-t pt-1 text-xs font-medium text-gray-700">
+                                    <dt className="flex items-center gap-1.5">
+                                        <IconCreditCard className="h-4 w-4 shrink-0" />
+                                        Net after compensation
+                                    </dt>
+                                    <dd>{Number(net_income_summary.net_after_compensation ?? 0).toLocaleString()}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">

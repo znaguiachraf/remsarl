@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Expense;
+use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -86,6 +87,104 @@ class AnalyticsService
                 ['label' => 'Sales', 'data' => $salesData],
                 ['label' => 'Expenses', 'data' => $expensesData],
             ],
+        ];
+    }
+
+    /**
+     * Net income summary: revenue, expenses, salary payments, net income, net after worker compensation.
+     * Used for payment calculations and dashboards. All amounts in project currency.
+     */
+    public function netIncomeSummary(Project $project, ?string $fromDate = null, ?string $toDate = null): array
+    {
+        $revenueQuery = Sale::forProject($project)
+            ->whereNotIn('status', ['cancelled', 'refunded']);
+        $expenseQuery = Expense::forProject($project);
+        $salaryPaymentsQuery = Payment::forProject($project)
+            ->where('payable_type', \App\Models\Salary::class)
+            ->whereNotIn('status', ['failed', 'refunded']);
+        $expensePaymentsQuery = Payment::forProject($project)
+            ->where('payable_type', Expense::class)
+            ->whereNotIn('status', ['failed', 'refunded']);
+
+        if ($fromDate) {
+            $revenueQuery->whereDate('created_at', '>=', $fromDate);
+            $expenseQuery->whereDate('expense_date', '>=', $fromDate);
+            $salaryPaymentsQuery->whereDate('payment_date', '>=', $fromDate);
+            $expensePaymentsQuery->whereDate('payment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $revenueQuery->whereDate('created_at', '<=', $toDate);
+            $expenseQuery->whereDate('expense_date', '<=', $toDate);
+            $salaryPaymentsQuery->whereDate('payment_date', '<=', $toDate);
+            $expensePaymentsQuery->whereDate('payment_date', '<=', $toDate);
+        }
+
+        $revenue = (float) $revenueQuery->sum('total');
+        if ($project->hasModule('pos')) {
+            $posQuery = \App\Models\PosOrder::forProject($project)
+                ->where('status', 'completed');
+            if ($fromDate) {
+                $posQuery->whereDate('created_at', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $posQuery->whereDate('created_at', '<=', $toDate);
+            }
+            $revenue += (float) $posQuery->sum('total');
+        }
+
+        $totalExpenses = (float) $expenseQuery->sum('amount');
+        $salaryPayments = (float) $salaryPaymentsQuery->sum('amount');
+        $expensePayments = (float) $expensePaymentsQuery->sum('amount');
+        $netIncome = $revenue - $totalExpenses;
+        $netAfterCompensation = $netIncome - $salaryPayments;
+
+        return [
+            'revenue' => $revenue,
+            'total_expenses' => $totalExpenses,
+            'salary_payments' => $salaryPayments,
+            'expense_payments' => $expensePayments,
+            'net_income' => $netIncome,
+            'net_after_compensation' => $netAfterCompensation,
+        ];
+    }
+
+    /**
+     * Expense report: totals by category and by period (month), for a given date range.
+     */
+    public function expenseReport(Project $project, ?string $fromDate = null, ?string $toDate = null): array
+    {
+        $byCategory = $this->expensesByCategory($project, $fromDate, $toDate);
+        $totalExpenses = array_sum(array_column($byCategory, 'value'));
+
+        $monthExpr = $this->isSqlite()
+            ? "strftime('%Y-%m', expense_date)"
+            : "DATE_FORMAT(expense_date, '%Y-%m')";
+        $byPeriodQuery = Expense::forProject($project);
+        if ($fromDate) {
+            $byPeriodQuery->whereDate('expense_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $byPeriodQuery->whereDate('expense_date', '<=', $toDate);
+        }
+        $byPeriod = $byPeriodQuery
+            ->selectRaw("{$monthExpr} as period, SUM(amount) as total")
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get()
+            ->map(fn ($row) => [
+                'period' => $row->period,
+                'label' => Carbon::parse($row->period . '-01')->format('M Y'),
+                'total' => (float) $row->total,
+            ])
+            ->values()
+            ->toArray();
+
+        return [
+            'by_category' => $byCategory,
+            'by_period' => $byPeriod,
+            'total_expenses' => $totalExpenses,
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
         ];
     }
 

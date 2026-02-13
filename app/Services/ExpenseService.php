@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\DB;
 class ExpenseService
 {
     public function __construct(
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected PaymentService $paymentService
     ) {}
 
     public function list(Project $project, array $filters = []): LengthAwarePaginator
@@ -105,7 +106,9 @@ class ExpenseService
 
     public function pay(Expense $expense, array $paymentData): Expense
     {
-        $expense = DB::transaction(function () use ($expense) {
+        return DB::transaction(function () use ($expense, $paymentData) {
+            $this->paymentService->createForExpense($expense, $paymentData);
+
             $expense->update(['status' => ExpenseStatus::Paid]);
 
             $this->activityLogService->log(
@@ -120,7 +123,5 @@ class ExpenseService
 
             return $expense->fresh(['expenseCategory']);
         });
-
-        return $expense;
     }
 }

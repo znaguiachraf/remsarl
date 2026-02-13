@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\ExpenseStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\SalaryStatus;
 use App\Models\Attendance;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Salary;
 use App\Models\Worker;
 use Carbon\Carbon;
@@ -70,8 +73,44 @@ class SalaryService
                 "Salary {$month}/{$year} generated for {$worker->full_name}"
             );
 
+            $this->createExpenseForSalary($worker->project, $salary, $worker->full_name, $month, $year);
+
             return $salary;
         });
+    }
+
+    /**
+     * Create an expense record when a salary is generated (for expense tracking and net income).
+     */
+    protected function createExpenseForSalary(\App\Models\Project $project, Salary $salary, string $workerName, int $month, int $year): void
+    {
+        $categoryId = ExpenseCategory::forProject($project)
+            ->where('name', 'Salaries')
+            ->first()?->id;
+
+        $expenseDate = Carbon::create($year, $month)->endOfMonth()->toDateString();
+
+        Expense::create([
+            'project_id' => $project->id,
+            'expense_category_id' => $categoryId,
+            'reference' => 'SALARY-' . $salary->id,
+            'description' => "Salary: {$workerName} ({$month}/{$year})",
+            'amount' => $salary->net_amount,
+            'status' => ExpenseStatus::Pending,
+            'expense_date' => $expenseDate,
+            'user_id' => auth()->id(),
+        ]);
+    }
+
+    /**
+     * When salary is fully paid, mark the linked expense as Paid.
+     */
+    protected function markSalaryExpenseAsPaid(Salary $salary): void
+    {
+        Expense::forProject($salary->project)
+            ->where('reference', 'SALARY-' . $salary->id)
+            ->where('status', ExpenseStatus::Pending)
+            ->update(['status' => ExpenseStatus::Paid]);
     }
 
     public function recordPayment(Salary $salary, array $paymentData): \App\Models\Payment
@@ -95,6 +134,7 @@ class SalaryService
             $totalPaid = (float) $salary->payments()->whereNotIn('status', ['failed', 'refunded'])->sum('amount');
             if ($totalPaid >= (float) $salary->net_amount) {
                 $salary->update(['status' => SalaryStatus::Paid]);
+                $this->markSalaryExpenseAsPaid($salary);
             }
 
             $this->activityLogService->log(

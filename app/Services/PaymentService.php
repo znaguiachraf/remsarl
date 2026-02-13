@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\PaymentStatus;
+use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Sale;
@@ -78,6 +79,46 @@ class PaymentService
             );
 
             return $payment->load(['user', 'sale']);
+        });
+    }
+
+    /**
+     * Create a payment record for an expense (integrates expenses into payment processing).
+     */
+    public function createForExpense(Expense $expense, array $paymentData): Payment
+    {
+        if ($expense->project_id === null) {
+            throw new InvalidArgumentException('Expense must belong to a project.');
+        }
+
+        $amount = (float) ($paymentData['amount'] ?? $expense->amount);
+        if ($amount <= 0) {
+            throw new InvalidArgumentException('Payment amount must be greater than zero.');
+        }
+
+        return DB::transaction(function () use ($expense, $paymentData, $amount) {
+            $payment = $expense->payments()->create([
+                'project_id' => $expense->project_id,
+                'payment_method' => $paymentData['payment_method'] ?? 'cash',
+                'amount' => $amount,
+                'reference' => $paymentData['reference'] ?? null,
+                'payment_date' => $paymentData['payment_date'] ?? now()->format('Y-m-d'),
+                'user_id' => auth()->id(),
+                'notes' => $paymentData['notes'] ?? null,
+                'status' => PaymentStatus::Paid,
+            ]);
+
+            $this->activityLogService->log(
+                $expense->project,
+                'created',
+                $payment,
+                null,
+                $payment->toArray(),
+                'payments',
+                "Payment #{$payment->id} created for Expense #{$expense->id}"
+            );
+
+            return $payment->load(['user']);
         });
     }
 

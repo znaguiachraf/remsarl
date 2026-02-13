@@ -215,6 +215,37 @@ class ProjectDashboardService
                 'subtext' => $pendingExpenses > 0 ? 'To pay' : null,
                 'href' => route('projects.modules.expenses.index', $project),
             ];
+
+            $thisMonthStart = Carbon::now()->startOfMonth()->toDateString();
+            $thisMonthEnd = Carbon::now()->endOfMonth()->toDateString();
+            $expensesThisMonth = (float) Expense::forProject($project)
+                ->whereBetween('expense_date', [$thisMonthStart, $thisMonthEnd])
+                ->sum('amount');
+
+            $kpis[] = [
+                'key' => 'expenses_this_month',
+                'label' => 'Expenses this month',
+                'value' => $expensesThisMonth,
+                'format' => 'currency',
+                'subtext' => null,
+                'href' => route('projects.modules.expenses.index', $project),
+            ];
+        }
+
+        if (($project->hasModule('sales') || $project->hasModule('pos')) && $project->hasModule('expenses')) {
+            $summary = app(AnalyticsService::class)->netIncomeSummary(
+                $project,
+                Carbon::now()->startOfMonth()->toDateString(),
+                Carbon::now()->endOfMonth()->toDateString()
+            );
+            $kpis[] = [
+                'key' => 'net_income_this_month',
+                'label' => 'Net income (this month)',
+                'value' => $summary['net_income'],
+                'format' => 'currency',
+                'subtext' => 'Revenue − expenses',
+                'href' => route('projects.modules.analytics.index', $project),
+            ];
         }
 
         if ($project->hasModule('hr')) {

@@ -6,16 +6,18 @@ use App\Enums\PaymentMethod;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Project;
-use Illuminate\Support\Facades\DB;
+use App\Services\AnalyticsService;
 use App\Services\ExpenseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ExpenseController extends Controller
 {
     public function __construct(
-        protected ExpenseService $expenseService
+        protected ExpenseService $expenseService,
+        protected AnalyticsService $analyticsService
     ) {}
 
     public function index(Project $project, Request $request): Response
@@ -34,6 +36,15 @@ class ExpenseController extends Controller
         $categories = ExpenseCategory::forProject($project)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'color']);
 
         $user = $request->user();
+
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+        if ($request->get('month')) {
+            $fromDate = $request->get('month') . '-01';
+            $toDate = date('Y-m-t', strtotime($fromDate));
+        }
+        $expenseReport = $this->analyticsService->expenseReport($project, $fromDate, $toDate);
+        $netIncomeSummary = $this->analyticsService->netIncomeSummary($project, $fromDate, $toDate);
 
         return Inertia::render('Expenses/Index', [
             'project' => [
@@ -81,6 +92,8 @@ class ExpenseController extends Controller
             'can' => [
                 'create' => $user->can('create', [Expense::class, $project]),
             ],
+            'expense_report' => $expenseReport,
+            'net_income_summary' => $netIncomeSummary,
         ]);
     }
 
