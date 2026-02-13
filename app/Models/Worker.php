@@ -26,6 +26,7 @@ class Worker extends Model
         'hire_date',
         'employee_number',
         'cnss_number',
+        'vacation_days_per_year',
     ];
 
     protected $casts = [

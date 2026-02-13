@@ -638,6 +638,31 @@ export default function HrWorkersShow({ project, worker, can }) {
                             </PrimaryButton>
                         )}
                     </div>
+                    {/* Vacation balance: allocated, used, remaining (for worker and manager) */}
+                    {worker.vacation_balance && (
+                        <div className="px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-gray-100 bg-gray-50/50">
+                            <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Allocated ({worker.vacation_balance.year})</p>
+                                <p className="mt-1 text-xl font-semibold text-gray-900">{worker.vacation_balance.allocated ?? 0} days</p>
+                            </div>
+                            <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Used</p>
+                                <p className="mt-1 text-xl font-semibold text-amber-600">{worker.vacation_balance.used ?? 0} days</p>
+                            </div>
+                            <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</p>
+                                <p className="mt-1 text-xl font-semibold text-emerald-600">{worker.vacation_balance.remaining ?? 0} days</p>
+                            </div>
+                            {worker.vacation_days_per_year != null && can?.update && (
+                                <div className="rounded-lg border border-gray-200 bg-white p-3 flex items-center">
+                                    <p className="text-xs text-gray-500">Annual allocation is editable in worker profile.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <div className="px-6 py-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-700">Vacation history & requests</p>
+                    </div>
                     {worker.vacations?.length > 0 ? (
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">

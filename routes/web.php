@@ -173,6 +173,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::prefix('modules/hr')->name('modules.hr.')->middleware('project.module:hr')->group(function () {
                 Route::get('/', fn (\Illuminate\Http\Request $r) => redirect()->route('projects.modules.hr.workers.index', ['project' => $r->route('project')]))->name('index');
                 Route::get('/attendance', [HrAttendanceController::class, 'projectIndex'])->name('attendance.index');
+                Route::get('/vacations', [HrVacationController::class, 'index'])->name('vacations.index');
                 Route::prefix('workers')->name('workers.')->group(function () {
                     Route::get('/', [HrWorkerController::class, 'index'])->name('index');
                     Route::post('/', [HrWorkerController::class, 'store'])->name('store');

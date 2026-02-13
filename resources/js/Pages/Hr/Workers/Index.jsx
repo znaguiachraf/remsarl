@@ -45,6 +45,7 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
         hire_date: '',
         employee_number: '',
         cnss_number: '',
+        vacation_days_per_year: '',
     });
 
     const applyFilters = (newFilters) => {
@@ -76,6 +77,7 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
             hire_date: worker.hire_date || '',
             employee_number: worker.employee_number || '',
             cnss_number: worker.cnss_number || '',
+            vacation_days_per_year: worker.vacation_days_per_year != null ? String(worker.vacation_days_per_year) : '',
         });
     };
 
@@ -116,7 +118,14 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
                             className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                             <IconCalendar className="h-4 w-4" />
-                            Attendance Overview
+                            Attendance
+                        </Link>
+                        <Link
+                            href={route('projects.modules.hr.vacations.index', project.id)}
+                            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                            <IconCalendar className="h-4 w-4" />
+                            Vacations
                         </Link>
                         {can?.create && (
                             <PrimaryButton onClick={() => setShowCreateModal(true)}>
@@ -319,6 +328,10 @@ export default function HrWorkersIndex({ project, workers, filters, can }) {
                                     <InputLabel value="Birth Date" />
                                     <TextInput type="date" value={editForm.data.birth_date} onChange={(e) => editForm.setData('birth_date', e.target.value)} className="block w-full" />
                                 </div>
+                            </div>
+                            <div>
+                                <InputLabel value="Vacation days per year" />
+                                <TextInput type="number" min="0" max="365" placeholder="e.g. 22" value={editForm.data.vacation_days_per_year} onChange={(e) => editForm.setData('vacation_days_per_year', e.target.value)} className="block w-full" />
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-2">

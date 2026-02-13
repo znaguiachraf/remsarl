@@ -8,14 +8,79 @@ use App\Models\Project;
 use App\Models\Vacation;
 use App\Models\Worker;
 use App\Services\ActivityLogService;
+use App\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class VacationController extends Controller
 {
     public function __construct(
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected VacationService $vacationService
     ) {}
+
+    /**
+     * List all vacations for the project: workers summary, calendar events, history.
+     */
+    public function index(Project $project, Request $request): Response
+    {
+        $this->authorize('viewAny', [Vacation::class, $project]);
+
+        $year = (int) ($request->get('year') ?? date('Y'));
+        $workerId = $request->get('worker_id');
+        $status = $request->get('status');
+
+        $workersSummary = $this->vacationService->getWorkersVacationSummary($project, $year);
+
+        $from = "{$year}-01-01";
+        $to = "{$year}-12-31";
+        $calendarEvents = $this->vacationService->getCalendarEvents($project, $from, $to);
+
+        $vacations = $this->vacationService->listForProject($project, [
+            'worker_id' => $workerId,
+            'status' => $status,
+            'year' => $year,
+            'per_page' => $request->get('per_page', 15),
+        ]);
+
+        $workers = Worker::forProject($project)->orderBy('first_name')->get(['id', 'first_name', 'last_name']);
+
+        return Inertia::render('Hr/Vacations/Index', [
+            'project' => [
+                'id' => $project->id,
+                'name' => $project->name,
+            ],
+            'workersSummary' => $workersSummary,
+            'calendarEvents' => $calendarEvents,
+            'vacations' => [
+                'data' => $vacations->map(fn ($v) => [
+                    'id' => $v->id,
+                    'worker_id' => $v->worker_id,
+                    'worker_name' => $v->worker->full_name ?? '—',
+                    'start_date' => $v->start_date->format('Y-m-d'),
+                    'end_date' => $v->end_date->format('Y-m-d'),
+                    'days_count' => $v->days_count,
+                    'status' => $v->status->value,
+                    'status_label' => $v->status->label(),
+                ]),
+                'links' => $vacations->linkCollection()->toArray(),
+                'meta' => [
+                    'current_page' => $vacations->currentPage(),
+                    'last_page' => $vacations->lastPage(),
+                    'per_page' => $vacations->perPage(),
+                    'total' => $vacations->total(),
+                ],
+            ],
+            'workers' => $workers->map(fn ($w) => ['id' => $w->id, 'name' => $w->full_name])->values()->toArray(),
+            'filters' => [
+                'year' => $year,
+                'worker_id' => $workerId,
+                'status' => $status,
+            ],
+        ]);
+    }
 
     public function store(Request $request, Project $project, Worker $worker)
     {
